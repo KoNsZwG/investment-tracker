@@ -1,52 +1,33 @@
+// src/views/HomeView.vue
 <script setup lang="ts">
-import { useInvestmentStore } from '../stores/investmentStore' // Corrected path alias
+import { useInvestmentStore } from '@/stores/investmentStore'
 import { useExpenseStore } from '@/stores/expenseStore'
-import AddInvestmentForm from '@/components/AddInvestmentForm.vue'
-import PortfolioPieChart from '@/components/PortfolioPieChart.vue' // Import the new chart component
-import InvestmentCard from '@/components/InvestmentCard.vue'
-import { computed, onMounted } from 'vue'
-import { ArrowTrendingDownIcon, ArrowTrendingUpIcon } from '@heroicons/vue/24/solid'
+import PortfolioPieChart from '@/components/PortfolioPieChart.vue'
 import ExpenseDoughnutChart from '@/components/ExpenseDoughnutChart.vue'
-
-import { ref } from 'vue'
+import { onMounted, computed } from 'vue'
+import { ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/vue/24/outline'
 
 const investmentStore = useInvestmentStore()
 const expenseStore = useExpenseStore()
-const isAddFormVisible = ref(false)
+
 const totalReturn = computed(
   () => investmentStore.portfolioCurrentValue - investmentStore.portfolioTotalCost,
 )
+
 onMounted(() => {
   investmentStore.fetchAllLivePrices()
 })
 </script>
-<template>
-  <!-- THIS IS THE KEY CHANGE: We use the same max-width and padding as the Navbar -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="flex justify-between items-center mb-8">
-      <div class="text-left">
-        <h1 class="text-3xl font-bold text-white">Financial Analyst of Investments and Expenses</h1>
-        <p class="text-brand-secondary mt-2">Track your Investments and Performance</p>
-      </div>
 
-      <div>
-        <button
-          @click="isAddFormVisible = !isAddFormVisible"
-          class="bg-brand-primary hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center"
-        >
-          <span class="mr-2">+</span> Add Investment
-        </button>
-      </div>
+<template>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="text-left mb-8">
+      <h1 class="text-3xl font-bold text-white">Dashboard Overview</h1>
+      <p class="text-brand-secondary mt-2">A high-level overview of your financial status.</p>
     </div>
 
-    <Transition name="fade">
-      <AddInvestmentForm v-if="isAddFormVisible" class="mb-8" />
-    </Transition>
-
     <!-- Portfolio Summary Grid -->
-
-    <h2 class="text-2xl font-bold text-white mb-4 mt-8">Portfolio Summary</h2>
-    <!-- CORRECTED GRID: Now uses lg:grid-cols-4 -->
+    <h2 class="text-2xl font-bold text-white mb-4 mt-8">Financial Summary</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <!-- Card 1: Total Value -->
       <div class="card">
@@ -95,14 +76,7 @@ onMounted(() => {
           ${{ expenseStore.totalExpensesThisMonth.toFixed(2) }}
         </p>
       </div>
-      <!-- Card 4: Total Invested -->
-      <div class="card">
-        <p class="text-sm text-brand-secondary mb-1">Total Invested</p>
-        <p class="text-3xl font-bold text-white">
-          ${{ investmentStore.portfolioTotalCost.toFixed(2) }}
-        </p>
-      </div>
-      <!-- Card 5: Total Return -->
+      <!-- Card 4: Total Return -->
       <div class="card">
         <div class="flex justify-between items-start">
           <div>
@@ -123,42 +97,26 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Asset Allocation & Investments Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-      <!-- Left Column: Chart -->
+    <!-- Overview Section with both charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+      <!-- Left Column: Investment Chart -->
       <div class="lg:col-span-1">
         <PortfolioPieChart
           v-if="investmentStore.investments.length > 0"
           :investments="investmentStore.investments"
-          class="card"
         />
-        <div
-          v-else
-          class="bg-brand-card p-6 rounded-lg shadow-lg flex items-center justify-center text-gray-500 h-full"
-        >
-          Chart will appear here.
+        <div v-else class="card flex items-center justify-center text-gray-500 h-full">
+          Investment chart will appear here.
         </div>
       </div>
-
-      <!-- Right Column: Investments List -->
+      <!-- Right Column: Expense Chart -->
       <div class="lg:col-span-1">
         <ExpenseDoughnutChart
           v-if="expenseStore.expenses.length > 0"
           :expenses="expenseStore.expenses"
         />
-        <h2 class="text-2xl font-bold text-white mb-4">Your Investments</h2>
-        <div v-if="investmentStore.investments.length > 0">
-          <TransitionGroup name="fade" tag="div" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InvestmentCard
-              v-for="investment in investmentStore.investments"
-              :key="investment.id"
-              :investment="investment"
-              class="card"
-            />
-          </TransitionGroup>
-        </div>
-        <div v-else class="text-center text-gray-500 bg-brand-card p-8 rounded-lg">
-          Your portfolio is empty. Add an investment to get started!
+        <div v-else class="card flex items-center justify-center text-gray-500 h-full">
+          Expense chart will appear here.
         </div>
       </div>
     </div>
@@ -166,7 +124,7 @@ onMounted(() => {
 </template>
 
 <!-- ADD THIS STYLE BLOCK AT THE VERY END OF THE FILE -->
-<style>
+<!-- <style>
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;
@@ -176,4 +134,4 @@ onMounted(() => {
 .fade-leave-to {
   opacity: 0;
 }
-</style>
+</style> -->

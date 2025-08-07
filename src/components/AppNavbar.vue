@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ChartBarIcon, BellIcon } from '@heroicons/vue/24/solid'
+import { RouterLink } from 'vue-router'
 </script>
 
 <template>
