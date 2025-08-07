@@ -96,7 +96,7 @@ export const useInvestmentStore = defineStore('investment', () => {
     if (investment) {
       investment.shares = updatedData.shares
       investment.purchasePrice = updatedData.purchasePrice
-      // After updating, let's re-fetch prices to update the current value
+      // We don't re-fetch here to save API calls, user can click Refresh
     }
   }
 

@@ -75,17 +75,20 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- Right Column: Investments List -->
       <div class="lg:col-span-2">
         <h2 class="text-2xl font-bold text-white mb-4">Your Investments</h2>
-        <!-- This is the corrected v-if/v-for structure -->
-        <div v-if="investmentStore.investments.length > 0" class="space-y-4">
-          <InvestmentCard
-            v-for="investment in investmentStore.investments"
-            :key="investment.id"
-            :investment="investment"
-          />
+
+        <div v-if="investmentStore.investments.length > 0">
+          <!-- THIS IS THE WRAPPER FOR OUR ANIMATION -->
+          <TransitionGroup name="fade" tag="div" class="space-y-4">
+            <InvestmentCard
+              v-for="investment in investmentStore.investments"
+              :key="investment.id"
+              :investment="investment"
+            />
+          </TransitionGroup>
         </div>
+
         <div v-else class="text-center text-gray-500 bg-brand-card p-8 rounded-lg">
           Your portfolio is empty. Add an investment to get started!
         </div>
@@ -93,3 +96,16 @@ onMounted(() => {
     </div>
   </main>
 </template>
+
+<!-- ADD THIS STYLE BLOCK AT THE VERY END OF THE FILE -->
+<style>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
