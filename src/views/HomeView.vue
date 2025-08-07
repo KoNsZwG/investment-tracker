@@ -80,7 +80,7 @@ onMounted(() => {
 
         <div v-if="investmentStore.investments.length > 0">
           <!-- THIS IS THE WRAPPER FOR OUR ANIMATION -->
-          <TransitionGroup name="fade" tag="div" class="space-y-4">
+          <TransitionGroup name="fade" tag="div" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InvestmentCard
               v-for="investment in investmentStore.investments"
               :key="investment.id"
