@@ -1,8 +1,9 @@
 // src/views/HomeView.vue
 
 <script setup lang="ts">
-import { useInvestmentStore } from '../stores/InvestmentStore'
+import { useInvestmentStore } from '../stores/InvestmentStore' // Corrected path alias
 import AddInvestmentForm from '@/components/AddInvestmentForm.vue'
+import PortfolioPieChart from '@/components/PortfolioPieChart.vue' // Import the new chart component
 import { onMounted } from 'vue'
 
 const investmentStore = useInvestmentStore()
@@ -18,9 +19,48 @@ onMounted(() => {
 
     <AddInvestmentForm />
 
-    <!-- Portfolio Summary Card -->
-    <div class="bg-gray-800 p-4 rounded-lg mb-6">
-      <!-- ... (summary card is the same) ... -->
+    <!-- NEW: Grid layout for Summary and Chart -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Portfolio Summary Card -->
+      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-white">Portfolio Summary</h2>
+          <button
+            @click="investmentStore.fetchLivePrices"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="investmentStore.isLoading"
+          >
+            {{ investmentStore.isLoading ? 'Refreshing...' : 'Refresh Prices' }}
+          </button>
+        </div>
+        <div class="space-y-2">
+          <p class="text-gray-400 flex justify-between">
+            <span>Total Cost:</span>
+            <span class="font-bold text-gray-300"
+              >${{ investmentStore.portfolioTotalCost.toFixed(2) }}</span
+            >
+          </p>
+          <p class="text-gray-400 flex justify-between">
+            <span>Current Value:</span>
+            <span class="font-bold text-green-500"
+              >${{ investmentStore.portfolioCurrentValue.toFixed(2) }}</span
+            >
+          </p>
+        </div>
+      </div>
+
+      <!-- Portfolio Chart Card -->
+      <PortfolioPieChart
+        v-if="investmentStore.investments.length > 0"
+        :investments="investmentStore.investments"
+      />
+      <!-- Show a placeholder if the portfolio is empty -->
+      <div
+        v-else
+        class="bg-gray-800 p-6 rounded-lg shadow-lg flex items-center justify-center text-gray-500"
+      >
+        Chart will appear here once you add an investment.
+      </div>
     </div>
 
     <!-- The list of investments -->
@@ -80,7 +120,7 @@ onMounted(() => {
               }}%
             </p>
           </div>
-          <div v-else class="text-gray-500 text-sm">Loading...</div>
+          <div v-else class="text-gray-500 text-sm animate-pulse">Fetching...</div>
         </div>
 
         <!-- Column 3: Delete Button -->
