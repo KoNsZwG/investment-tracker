@@ -11,11 +11,13 @@ onMounted(() => {
   investmentStore.fetchAllLivePrices()
 })
 </script>
-
 <template>
-  <main class="p-4 md:p-8 max-w-5xl mx-auto">
-    <h1 class="text-3xl font-bold text-white mb-2 text-center">Portfolio Overview</h1>
-    <p class="text-brand-secondary mb-8 text-center">Track your investments and performance</p>
+  <!-- THIS IS THE KEY CHANGE: We use the same max-width and padding as the Navbar -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="text-left mb-8">
+      <h1 class="text-3xl font-bold text-white">Portfolio Overview</h1>
+      <p class="text-brand-secondary mt-2">Track your investments and performance</p>
+    </div>
 
     <AddInvestmentForm />
 
@@ -33,6 +35,7 @@ onMounted(() => {
       <!-- Card 2: Total Invested (Cost) -->
       <div class="bg-brand-card p-6 rounded-lg shadow-lg">
         <p class="text-sm text-brand-secondary mb-1">Total Invested</p>
+        p>
         <p class="text-3xl font-bold text-white">
           ${{ investmentStore.portfolioTotalCost.toFixed(2) }}
         </p>
@@ -58,11 +61,10 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- NEW: Asset Allocation & Investments Section (Two-Column Layout) -->
+    <!-- Asset Allocation & Investments Section -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
       <!-- Left Column: Chart -->
       <div class="lg:col-span-1">
-        <!-- The v-if is on the component itself, which is fine -->
         <PortfolioPieChart
           v-if="investmentStore.investments.length > 0"
           :investments="investmentStore.investments"
@@ -75,11 +77,10 @@ onMounted(() => {
         </div>
       </div>
 
+      <!-- Right Column: Investments List -->
       <div class="lg:col-span-2">
         <h2 class="text-2xl font-bold text-white mb-4">Your Investments</h2>
-
         <div v-if="investmentStore.investments.length > 0">
-          <!-- THIS IS THE WRAPPER FOR OUR ANIMATION -->
           <TransitionGroup name="fade" tag="div" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InvestmentCard
               v-for="investment in investmentStore.investments"
@@ -88,7 +89,6 @@ onMounted(() => {
             />
           </TransitionGroup>
         </div>
-
         <div v-else class="text-center text-gray-500 bg-brand-card p-8 rounded-lg">
           Your portfolio is empty. Add an investment to get started!
         </div>
