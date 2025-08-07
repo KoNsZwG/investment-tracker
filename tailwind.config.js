@@ -4,11 +4,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        'brand-dark': '#1E293B', // A deep navy blue for backgrounds
-        'brand-card': '#334155', // A slightly lighter color for cards
-        'brand-primary': '#10B981', // The vibrant green for positive numbers/buttons
-        'brand-secondary': '#64748B', // A neutral gray for text
-        'brand-danger': '#EF4444', // A clear red for negative numbers
+        'brand-dark': '#0F172A', // A richer, darker navy blue
+        'brand-card': '#1E293B', // The old dark color is now our card color
+        'brand-border': '#334155', // A subtle border color
+        'brand-primary': '#10B981',
+        'brand-secondary': '#94A3B8', // Lighter gray for text
+        'brand-danger': '#EF4444',
       },
     },
   },

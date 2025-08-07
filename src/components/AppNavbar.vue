@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChartBarIcon } from '@heroicons/vue/24/solid'
+import { ChartBarIcon, BellIcon } from '@heroicons/vue/24/solid'
 </script>
 
 <template>
@@ -42,7 +42,32 @@ import { ChartBarIcon } from '@heroicons/vue/24/solid'
 
         <!-- Profile/Notifications (Placeholder) -->
         <div class="hidden md:block">
-          <!-- Add notification bell and profile icon here later -->
+          <div class="ml-4 flex items-center md:ml-6 space-x-4">
+            <button
+              type="button"
+              class="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+            >
+              <span class="sr-only">View notifications</span>
+              <BellIcon class="h-6 w-6" aria-hidden="true" />
+            </button>
+
+            <!-- Profile dropdown placeholder -->
+            <div class="ml-3 relative">
+              <div>
+                <button
+                  type="button"
+                  class="max-w-xs bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+                  id="user-menu-button"
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                >
+                  <span class="sr-only">Open user menu</span>
+                  <!-- Placeholder for profile image -->
+                  <div class="h-8 w-8 rounded-full bg-brand-secondary"></div>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

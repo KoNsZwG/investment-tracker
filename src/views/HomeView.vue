@@ -5,7 +5,10 @@ import PortfolioPieChart from '@/components/PortfolioPieChart.vue' // Import the
 import InvestmentCard from '@/components/InvestmentCard.vue'
 import { onMounted } from 'vue'
 
+import { ref } from 'vue'
+
 const investmentStore = useInvestmentStore()
+const isAddFormVisible = ref(false)
 
 onMounted(() => {
   investmentStore.fetchAllLivePrices()
@@ -19,13 +22,15 @@ onMounted(() => {
       <p class="text-brand-secondary mt-2">Track your investments and performance</p>
     </div>
 
-    <AddInvestmentForm />
+    <Transition name="fade">
+      <AddInvestmentForm v-if="isAddFormVisible" class="mb-8" />
+    </Transition>
 
     <!-- Portfolio Summary Grid -->
     <h2 class="text-2xl font-bold text-white mb-4 mt-8">Portfolio Summary</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       <!-- Card 1: Total Value -->
-      <div class="bg-brand-card p-6 rounded-lg shadow-lg">
+      <div class="card">
         <p class="text-sm text-brand-secondary mb-1">Total Value</p>
         <p class="text-3xl font-bold text-white">
           ${{ investmentStore.portfolioCurrentValue.toFixed(2) }}
@@ -33,16 +38,15 @@ onMounted(() => {
       </div>
 
       <!-- Card 2: Total Invested (Cost) -->
-      <div class="bg-brand-card p-6 rounded-lg shadow-lg">
+      <div class="card">
         <p class="text-sm text-brand-secondary mb-1">Total Invested</p>
-        p>
         <p class="text-3xl font-bold text-white">
           ${{ investmentStore.portfolioTotalCost.toFixed(2) }}
         </p>
       </div>
 
       <!-- Card 3: Total Return -->
-      <div class="bg-brand-card p-6 rounded-lg shadow-lg">
+      <div class="card">
         <p class="text-sm text-brand-secondary mb-1">Total Return</p>
         <p
           class="text-3xl font-bold"
@@ -68,6 +72,7 @@ onMounted(() => {
         <PortfolioPieChart
           v-if="investmentStore.investments.length > 0"
           :investments="investmentStore.investments"
+          class="card"
         />
         <div
           v-else
@@ -86,6 +91,7 @@ onMounted(() => {
               v-for="investment in investmentStore.investments"
               :key="investment.id"
               :investment="investment"
+              class="card"
             />
           </TransitionGroup>
         </div>
