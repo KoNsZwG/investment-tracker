@@ -5,6 +5,8 @@ export interface Investment {
   shares: number
   purchasePrice: number
   currentPrice?: number
+  dailyChange?: number
+  dailyChangePercent?: number
   error?: string
 }
 export interface ApiQuote {

@@ -1,9 +1,15 @@
 // src/components/InvestmentCard.vue
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useInvestmentStore } from '../stores/InvestmentStore'
+import { useInvestmentStore } from '../stores/InvestmentStore' // Corrected Path Alias
 import type { Investment } from '@/types'
-import { EllipsisVerticalIcon, CheckIcon, XMarkIcon } from '@heroicons/vue/24/solid'
+import {
+  EllipsisVerticalIcon,
+  CheckIcon,
+  XMarkIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
+} from '@heroicons/vue/24/outline' // Using outline for a cleaner look
 
 const props = defineProps<{
   investment: Investment
@@ -22,7 +28,7 @@ function startEditing() {
   editedShares.value = props.investment.shares
   editedPurchasePrice.value = props.investment.purchasePrice
   isEditing.value = true
-  isMenuOpen.value = false // Close the menu when editing starts
+  isMenuOpen.value = false
 }
 
 function cancelEditing() {
@@ -128,15 +134,30 @@ const totalGainLossPercent = computed(() => {
           ${{ investment.currentPrice.toFixed(2) }}
         </p>
         <p v-else class="text-3xl font-bold text-brand-secondary animate-pulse">$--.--</p>
-        <p class="text-sm text-brand-secondary">Daily change will go here</p>
+        <div
+          v-if="investment.dailyChange"
+          class="flex items-center text-sm"
+          :class="investment.dailyChange >= 0 ? 'text-brand-primary' : 'text-brand-danger'"
+        >
+          <component
+            :is="investment.dailyChange >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon"
+            class="h-4 w-4 mr-1"
+          />
+          <span
+            >{{ investment.dailyChange.toFixed(2) }} ({{
+              investment.dailyChangePercent?.toFixed(2)
+            }}%)</span
+          >
+        </div>
+        <div v-else class="text-sm text-brand-secondary animate-pulse">--.--</div>
       </div>
 
+      <!-- CORRECTED BOTTOM SECTION (NO DUPLICATION) -->
       <div class="border-t border-gray-600 pt-4">
         <div class="flex justify-between text-sm mb-2">
           <span class="text-brand-secondary">Shares</span>
           <span>{{ investment.shares }}</span>
         </div>
-
         <div class="flex justify-between text-sm mb-2">
           <span class="text-brand-secondary">Total Value</span>
           <span>${{ totalValue.toFixed(2) }}</span>
@@ -162,7 +183,6 @@ const totalGainLossPercent = computed(() => {
               }}%)
             </span>
           </div>
-          <!-- Otherwise, show a loading placeholder -->
           <div v-else class="flex justify-between text-sm font-bold">
             <span class="text-brand-secondary">Total Gain/Loss</span>
             <span class="text-brand-secondary animate-pulse">Calculating...</span>

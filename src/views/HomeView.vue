@@ -3,13 +3,16 @@ import { useInvestmentStore } from '../stores/InvestmentStore' // Corrected path
 import AddInvestmentForm from '@/components/AddInvestmentForm.vue'
 import PortfolioPieChart from '@/components/PortfolioPieChart.vue' // Import the new chart component
 import InvestmentCard from '@/components/InvestmentCard.vue'
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
+import { ArrowTrendingDownIcon, ArrowTrendingUpIcon } from '@heroicons/vue/24/solid'
 
 import { ref } from 'vue'
 
 const investmentStore = useInvestmentStore()
 const isAddFormVisible = ref(false)
-
+const totalReturn = computed(
+  () => investmentStore.portfolioCurrentValue - investmentStore.portfolioTotalCost,
+)
 onMounted(() => {
   investmentStore.fetchAllLivePrices()
 })
@@ -27,8 +30,10 @@ onMounted(() => {
     </Transition>
 
     <!-- Portfolio Summary Grid -->
+
     <h2 class="text-2xl font-bold text-white mb-4 mt-8">Portfolio Summary</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <!-- CORRECTED GRID: Now uses lg:grid-cols-4 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <!-- Card 1: Total Value -->
       <div class="card">
         <p class="text-sm text-brand-secondary mb-1">Total Value</p>
@@ -36,32 +41,64 @@ onMounted(() => {
           ${{ investmentStore.portfolioCurrentValue.toFixed(2) }}
         </p>
       </div>
-
-      <!-- Card 2: Total Invested (Cost) -->
+      <!-- Card 2: Today's Gain/Loss -->
+      <div class="card">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-sm text-brand-secondary mb-1">Today's Gain/Loss</p>
+            <p
+              class="text-3xl font-bold"
+              :class="
+                investmentStore.portfolioTodayGainLoss >= 0
+                  ? 'text-brand-primary'
+                  : 'text-brand-danger'
+              "
+            >
+              {{ investmentStore.portfolioTodayGainLoss >= 0 ? '+' : '' }}${{
+                investmentStore.portfolioTodayGainLoss.toFixed(2)
+              }}
+            </p>
+          </div>
+          <component
+            :is="
+              investmentStore.portfolioTodayGainLoss >= 0
+                ? ArrowTrendingUpIcon
+                : ArrowTrendingDownIcon
+            "
+            class="h-6 w-6"
+            :class="
+              investmentStore.portfolioTodayGainLoss >= 0
+                ? 'text-brand-primary'
+                : 'text-brand-danger'
+            "
+          />
+        </div>
+      </div>
+      <!-- Card 3: Total Invested -->
       <div class="card">
         <p class="text-sm text-brand-secondary mb-1">Total Invested</p>
         <p class="text-3xl font-bold text-white">
           ${{ investmentStore.portfolioTotalCost.toFixed(2) }}
         </p>
       </div>
-
-      <!-- Card 3: Total Return -->
+      <!-- Card 4: Total Return -->
       <div class="card">
-        <p class="text-sm text-brand-secondary mb-1">Total Return</p>
-        <p
-          class="text-3xl font-bold"
-          :class="
-            investmentStore.portfolioCurrentValue >= investmentStore.portfolioTotalCost
-              ? 'text-brand-primary'
-              : 'text-brand-danger'
-          "
-        >
-          {{
-            investmentStore.portfolioCurrentValue >= investmentStore.portfolioTotalCost ? '+' : ''
-          }}${{
-            (investmentStore.portfolioCurrentValue - investmentStore.portfolioTotalCost).toFixed(2)
-          }}
-        </p>
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-sm text-brand-secondary mb-1">Total Return</p>
+            <p
+              class="text-3xl font-bold"
+              :class="totalReturn >= 0 ? 'text-brand-primary' : 'text-brand-danger'"
+            >
+              {{ totalReturn >= 0 ? '+' : '' }}${{ totalReturn.toFixed(2) }}
+            </p>
+          </div>
+          <component
+            :is="totalReturn >= 0 ? ArrowTrendingUpIcon : ArrowTrendingDownIcon"
+            class="h-6 w-6"
+            :class="totalReturn >= 0 ? 'text-brand-primary' : 'text-brand-danger'"
+          />
+        </div>
       </div>
     </div>
 

@@ -43,6 +43,15 @@ export const useInvestmentStore = defineStore('investment', () => {
       return total + inv.shares * price
     }, 0),
   )
+  const portfolioTodayGainLoss = computed(() =>
+    investments.value.reduce((total, inv) => {
+      // Only add if dailyChange is a valid number
+      if (inv.dailyChange) {
+        return total + inv.shares * inv.dailyChange
+      }
+      return total
+    }, 0),
+  )
 
   // --- ACTIONS ---
   async function fetchSinglePrice(investment: Investment) {
@@ -62,6 +71,8 @@ export const useInvestmentStore = defineStore('investment', () => {
       if (data.Note) throw new Error('API limit reached.')
       if (quote && quote['05. price'] && Object.keys(quote).length > 0) {
         investment.currentPrice = parseFloat(quote['05. price'])
+        investment.dailyChange = parseFloat(quote['09. change'])
+        investment.dailyChangePercent = parseFloat(quote['10. change percent'].replace('%', ''))
       } else {
         throw new Error('Invalid ticker.')
       }
@@ -71,6 +82,7 @@ export const useInvestmentStore = defineStore('investment', () => {
       investment.error = error.message
     }
   }
+
   function addInvestment(newInvestment: Investment) {
     // ... (existing addInvestment function is the same)
     const existing = investments.value.find((inv) => inv.id === newInvestment.id)
@@ -162,6 +174,7 @@ export const useInvestmentStore = defineStore('investment', () => {
     isLoading,
     portfolioTotalCost,
     portfolioCurrentValue,
+    portfolioTodayGainLoss,
     addInvestment,
     deleteInvestment,
     updateInvestment,
