@@ -9,6 +9,15 @@ export interface Investment {
   dailyChangePercent?: number
   error?: string
 }
+
+export interface Expense {
+  id: string // A unique ID for each expense
+  title: string
+  amount: number
+  category: string
+  date: string // We'll store the date as a string in 'YYYY-MM-DD' format
+}
+
 export interface ApiQuote {
   symbol: string
   price: number

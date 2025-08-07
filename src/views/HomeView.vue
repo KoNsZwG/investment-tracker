@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useInvestmentStore } from '../stores/InvestmentStore' // Corrected path alias
+import { useInvestmentStore } from '../stores/investmentStore' // Corrected path alias
 import AddInvestmentForm from '@/components/AddInvestmentForm.vue'
 import PortfolioPieChart from '@/components/PortfolioPieChart.vue' // Import the new chart component
 import InvestmentCard from '@/components/InvestmentCard.vue'
@@ -20,9 +20,20 @@ onMounted(() => {
 <template>
   <!-- THIS IS THE KEY CHANGE: We use the same max-width and padding as the Navbar -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="text-left mb-8">
-      <h1 class="text-3xl font-bold text-white">Portfolio Overview</h1>
-      <p class="text-brand-secondary mt-2">Track your investments and performance</p>
+    <div class="flex justify-between items-center mb-8">
+      <div class="text-left">
+        <h1 class="text-3xl font-bold text-white">Financial Analyst of Investments and Expenses</h1>
+        <p class="text-brand-secondary mt-2">Track your Investments and Performance</p>
+      </div>
+
+      <div>
+        <button
+          @click="isAddFormVisible = !isAddFormVisible"
+          class="bg-brand-primary hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center"
+        >
+          <span class="mr-2">+</span> Add Investment
+        </button>
+      </div>
     </div>
 
     <Transition name="fade">

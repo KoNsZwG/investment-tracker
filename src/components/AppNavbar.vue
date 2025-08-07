@@ -12,31 +12,19 @@ import { ChartBarIcon, BellIcon } from '@heroicons/vue/24/solid'
             <ChartBarIcon class="h-8 w-8 text-brand-primary" />
           </div>
           <div class="ml-3">
-            <h1 class="text-white text-xl font-bold">Investr</h1>
+            <h1 class="text-white text-xl font-bold">FAIE</h1>
           </div>
         </div>
 
         <!-- Navigation Links -->
         <div class="hidden md:block">
           <div class="ml-10 flex items-baseline space-x-4">
-            <a href="#" class="bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
-              >Dashboard</a
-            >
-            <a
-              href="#"
-              class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-              >Portfolio</a
-            >
-            <a
-              href="#"
-              class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-              >Research</a
-            >
-            <a
-              href="#"
-              class="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-              >News</a
-            >
+            <RouterLink :to="{ name: 'dashboard' }" class="nav-link">Dashboard</RouterLink>
+            <RouterLink :to="{ name: 'portfolio' }" class="nav-link">Portfolio</RouterLink>
+            <RouterLink :to="{ name: 'expenses' }" class="nav-link">Expenses</RouterLink>
+            <RouterLink :to="{ name: 'analytics' }" class="nav-link">Analytics</RouterLink>
+            <a href="#" class="nav-link-disabled">Research</a>
+            <a href="#" class="nav-link-disabled">News</a>
           </div>
         </div>
 
@@ -73,3 +61,16 @@ import { ChartBarIcon, BellIcon } from '@heroicons/vue/24/solid'
     </div>
   </nav>
 </template>
+
+<style scoped>
+.nav-link {
+  @apply text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium;
+}
+.nav-link-disabled {
+  @apply text-gray-500 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed;
+}
+/* This class is automatically applied by Vue Router to the active link */
+.router-link-exact-active {
+  @apply bg-gray-900 text-white;
+}
+</style>

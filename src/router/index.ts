@@ -1,3 +1,4 @@
+// src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 
@@ -6,16 +7,24 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
+      name: 'dashboard', // We'll call our HomeView the 'dashboard'
       component: HomeView,
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      path: '/portfolio',
+      name: 'portfolio',
+      // This is a lazy-loaded component. It's a performance best practice.
+      component: () => import('../views/PortfolioView.vue'),
+    },
+    {
+      path: '/expenses',
+      name: 'expenses',
+      component: () => import('../views/ExpensesView.vue'),
+    },
+    {
+      path: '/analytics',
+      name: 'analytics',
+      component: () => import('../views/AnalyticsView.vue'),
     },
   ],
 })

@@ -9,6 +9,7 @@ import {
   XMarkIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
+  ArrowPathIcon,
 } from '@heroicons/vue/24/outline' // Using outline for a cleaner look
 
 const props = defineProps<{
@@ -130,12 +131,26 @@ const totalGainLossPercent = computed(() => {
       <p class="text-sm text-brand-secondary mb-4">{{ investment.name }}</p>
 
       <div class="flex justify-between items-baseline mb-4">
+        <!-- Case 1: Price is successfully loaded -->
         <p v-if="investment.currentPrice" class="text-3xl font-bold">
           ${{ investment.currentPrice.toFixed(2) }}
         </p>
+        <!-- Case 2: There is an error -->
+        <p v-else-if="investment.error" class="text-lg font-bold text-brand-danger">Failed</p>
+        <!-- Case 3: Still loading -->
         <p v-else class="text-3xl font-bold text-brand-secondary animate-pulse">$--.--</p>
+        <!-- Daily Change / Retry Button -->
+        <div v-if="investment.error" class="flex items-center">
+          <button
+            @click="investmentStore.fetchSinglePrice(investment)"
+            title="Retry"
+            class="text-blue-400 hover:text-white"
+          >
+            <ArrowPathIcon class="h-5 w-5" />
+          </button>
+        </div>
         <div
-          v-if="investment.dailyChange"
+          v-else-if="investment.dailyChange"
           class="flex items-center text-sm"
           :class="investment.dailyChange >= 0 ? 'text-brand-primary' : 'text-brand-danger'"
         >
@@ -173,7 +188,6 @@ const totalGainLossPercent = computed(() => {
             <span>${{ totalValue.toFixed(2) }}</span>
           </div>
 
-          <!-- THIS IS THE FIX -->
           <!-- Only show Gain/Loss if we have a current price -->
           <div v-if="investment.currentPrice" class="flex justify-between text-sm font-bold">
             <span class="text-brand-secondary">Total Gain/Loss</span>
