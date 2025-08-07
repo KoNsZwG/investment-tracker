@@ -1,5 +1,3 @@
-// src/views/HomeView.vue
-
 <script setup lang="ts">
 import { useInvestmentStore } from '../stores/InvestmentStore' // Corrected path alias
 import AddInvestmentForm from '@/components/AddInvestmentForm.vue'
@@ -15,71 +13,83 @@ onMounted(() => {
 </script>
 
 <template>
-  <main class="p-4 md:p-8 max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold text-green-400 mb-6 text-center">My Portfolio</h1>
+  <main class="p-4 md:p-8 max-w-5xl mx-auto">
+    <h1 class="text-3xl font-bold text-white mb-2 text-center">Portfolio Overview</h1>
+    <p class="text-brand-secondary mb-8 text-center">Track your investments and performance</p>
 
     <AddInvestmentForm />
 
-    <!-- NEW: Grid layout for Summary and Chart -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <!-- Portfolio Summary Card -->
-      <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-white">Portfolio Summary</h2>
-          <button
-            @click="investmentStore.fetchAllLivePrices"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="investmentStore.isLoading"
-          >
-            {{ investmentStore.isLoading ? 'Refreshing...' : 'Refresh Prices' }}
-          </button>
-        </div>
-        <div class="space-y-2">
-          <p class="text-gray-400 flex justify-between">
-            <span>Total Cost:</span>
-            <span class="font-bold text-gray-300"
-              >${{ investmentStore.portfolioTotalCost.toFixed(2) }}</span
-            >
-          </p>
-          <p class="text-gray-400 flex justify-between">
-            <span>Current Value:</span>
-            <span class="font-bold text-green-500"
-              >${{ investmentStore.portfolioCurrentValue.toFixed(2) }}</span
-            >
-          </p>
-        </div>
+    <!-- Portfolio Summary Grid -->
+    <h2 class="text-2xl font-bold text-white mb-4 mt-8">Portfolio Summary</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <!-- Card 1: Total Value -->
+      <div class="bg-brand-card p-6 rounded-lg shadow-lg">
+        <p class="text-sm text-brand-secondary mb-1">Total Value</p>
+        <p class="text-3xl font-bold text-white">
+          ${{ investmentStore.portfolioCurrentValue.toFixed(2) }}
+        </p>
       </div>
 
-      <!-- Portfolio Chart Card -->
-      <PortfolioPieChart
-        v-if="investmentStore.investments.length > 0"
-        :investments="investmentStore.investments"
-      />
-      <!-- Show a placeholder if the portfolio is empty -->
-      <div
-        v-else
-        class="bg-gray-800 p-6 rounded-lg shadow-lg flex items-center justify-center text-gray-500"
-      >
-        Chart will appear here once you add an investment.
+      <!-- Card 2: Total Invested (Cost) -->
+      <div class="bg-brand-card p-6 rounded-lg shadow-lg">
+        <p class="text-sm text-brand-secondary mb-1">Total Invested</p>
+        <p class="text-3xl font-bold text-white">
+          ${{ investmentStore.portfolioTotalCost.toFixed(2) }}
+        </p>
+      </div>
+
+      <!-- Card 3: Total Return -->
+      <div class="bg-brand-card p-6 rounded-lg shadow-lg">
+        <p class="text-sm text-brand-secondary mb-1">Total Return</p>
+        <p
+          class="text-3xl font-bold"
+          :class="
+            investmentStore.portfolioCurrentValue >= investmentStore.portfolioTotalCost
+              ? 'text-brand-primary'
+              : 'text-brand-danger'
+          "
+        >
+          {{
+            investmentStore.portfolioCurrentValue >= investmentStore.portfolioTotalCost ? '+' : ''
+          }}${{
+            (investmentStore.portfolioCurrentValue - investmentStore.portfolioTotalCost).toFixed(2)
+          }}
+        </p>
       </div>
     </div>
 
-    <!-- The list of investments -->
-    <div class="space-y-4">
-      <!-- Show a message if there are no investments -->
-      <div
-        v-if="investmentStore.investments.length === 0"
-        class="text-center text-gray-500 bg-gray-800 p-8 rounded-lg"
-      >
-        Your portfolio is empty. Add an investment to get started!
+    <!-- NEW: Asset Allocation & Investments Section (Two-Column Layout) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+      <!-- Left Column: Chart -->
+      <div class="lg:col-span-1">
+        <!-- The v-if is on the component itself, which is fine -->
+        <PortfolioPieChart
+          v-if="investmentStore.investments.length > 0"
+          :investments="investmentStore.investments"
+        />
+        <div
+          v-else
+          class="bg-brand-card p-6 rounded-lg shadow-lg flex items-center justify-center text-gray-500 h-full"
+        >
+          Chart will appear here.
+        </div>
       </div>
 
-      <InvestmentCard
-        v-else
-        v-for="investment in investmentStore.investments"
-        :key="investment.id"
-        :investment="investment"
-      />
+      <!-- Right Column: Investments List -->
+      <div class="lg:col-span-2">
+        <h2 class="text-2xl font-bold text-white mb-4">Your Investments</h2>
+        <!-- This is the corrected v-if/v-for structure -->
+        <div v-if="investmentStore.investments.length > 0" class="space-y-4">
+          <InvestmentCard
+            v-for="investment in investmentStore.investments"
+            :key="investment.id"
+            :investment="investment"
+          />
+        </div>
+        <div v-else class="text-center text-gray-500 bg-brand-card p-8 rounded-lg">
+          Your portfolio is empty. Add an investment to get started!
+        </div>
+      </div>
     </div>
   </main>
 </template>
