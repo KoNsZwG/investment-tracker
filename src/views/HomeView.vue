@@ -6,6 +6,7 @@ import PortfolioPieChart from '@/components/PortfolioPieChart.vue'
 import ExpenseDoughnutChart from '@/components/ExpenseDoughnutChart.vue'
 import { onMounted, computed } from 'vue'
 import { ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/vue/24/outline'
+import { formatCurrency } from '@/utils/formatters'
 
 const investmentStore = useInvestmentStore()
 const expenseStore = useExpenseStore()
@@ -33,7 +34,7 @@ onMounted(() => {
       <div class="card">
         <p class="text-sm text-brand-secondary mb-1">Total Value</p>
         <p class="text-3xl font-bold text-white">
-          ${{ investmentStore.portfolioCurrentValue.toFixed(2) }}
+          {{ formatCurrency(investmentStore.portfolioCurrentValue) }}
         </p>
       </div>
       <!-- Card 2: Today's Gain/Loss -->
@@ -49,9 +50,8 @@ onMounted(() => {
                   : 'text-brand-danger'
               "
             >
-              {{ investmentStore.portfolioTodayGainLoss >= 0 ? '+' : '' }}${{
-                investmentStore.portfolioTodayGainLoss.toFixed(2)
-              }}
+              {{ investmentStore.portfolioTodayGainLoss >= 0 ? '+' : ''
+              }}{{ formatCurrency(investmentStore.portfolioTodayGainLoss) }}
             </p>
           </div>
           <component
@@ -73,7 +73,7 @@ onMounted(() => {
       <div class="card">
         <p class="text-sm text-brand-secondary mb-1">Monthly Spending</p>
         <p class="text-3xl font-bold text-white">
-          ${{ expenseStore.totalExpensesThisMonth.toFixed(2) }}
+          {{ formatCurrency(expenseStore.totalExpensesThisMonth) }}
         </p>
       </div>
       <!-- Card 4: Total Return -->
@@ -85,7 +85,7 @@ onMounted(() => {
               class="text-3xl font-bold"
               :class="totalReturn >= 0 ? 'text-brand-primary' : 'text-brand-danger'"
             >
-              {{ totalReturn >= 0 ? '+' : '' }}${{ totalReturn.toFixed(2) }}
+              {{ totalReturn >= 0 ? '+' : '' }}{{ formatCurrency(totalReturn) }}
             </p>
           </div>
           <component

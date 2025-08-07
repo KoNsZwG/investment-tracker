@@ -234,6 +234,10 @@ export const useInvestmentStore = defineStore('investment', () => {
     isLoading.value = false
   }
 
+  function clearPortfolio() {
+    investments.value = []
+  }
+
   return {
     investments,
     isLoading,
@@ -246,5 +250,6 @@ export const useInvestmentStore = defineStore('investment', () => {
     updateInvestment,
     fetchSinglePrice,
     fetchAllLivePrices,
+    clearPortfolio,
   }
 })

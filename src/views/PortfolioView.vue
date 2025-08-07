@@ -11,6 +11,12 @@ const isAddFormVisible = ref(false)
 onMounted(() => {
   investmentStore.fetchAllLivePrices()
 })
+
+function handleClearPortfolio() {
+  if (confirm('Are you sure you want to delete all investments? This action cannot be undone.')) {
+    investmentStore.clearPortfolio()
+  }
+}
 </script>
 
 <template>
@@ -21,12 +27,21 @@ onMounted(() => {
         <p class="text-brand-secondary mt-2">Manage your stock and ETF holdings.</p>
       </div>
       <div>
-        <button
-          @click="isAddFormVisible = !isAddFormVisible"
-          class="bg-brand-primary hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center"
-        >
-          <span class="mr-2">+</span> Add Investment
-        </button>
+        <div class="flex space-x-2">
+          <button
+            @click="handleClearPortfolio"
+            v-if="investmentStore.investments.length > 0"
+            class="bg-brand-danger hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg"
+          >
+            Clear All
+          </button>
+          <button
+            @click="isAddFormVisible = !isAddFormVisible"
+            class="bg-brand-primary hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center"
+          >
+            <span class="mr-2">+</span> Add Investment
+          </button>
+        </div>
       </div>
     </div>
 

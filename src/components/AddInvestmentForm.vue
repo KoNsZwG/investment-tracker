@@ -1,8 +1,7 @@
 // src/components/AddInvestmentForm.vue
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useInvestmentStore } from '@/stores/InvestmentStore'
-import type { Investment } from '@/types'
+import { useInvestmentStore } from '../stores/investmentStore'
 
 const investmentStore = useInvestmentStore()
 
@@ -19,16 +18,15 @@ function handleSubmit() {
     return
   }
 
-  // Create a new investment object from our form's reactive data
-  const newInvestment: Investment = {
-    id: ticker.value.toUpperCase(), // Standardize the ticker to uppercase
+  // Prepare new investment data omitting 'id' and 'dateAdded'
+  const newInvestmentData = {
     name: name.value,
     shares: shares.value,
     purchasePrice: purchasePrice.value,
   }
 
-  // This is the magic part: we call the action from our Pinia store
-  investmentStore.addInvestment(newInvestment)
+  // Use ticker as the id argument
+  investmentStore.addInvestment(ticker.value.toUpperCase(), newInvestmentData)
 
   // Clear the form fields for the next entry
   ticker.value = ''

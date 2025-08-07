@@ -1,7 +1,7 @@
 // src/components/InvestmentCard.vue
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useInvestmentStore } from '../stores/InvestmentStore' // Corrected Path Alias
+import { useInvestmentStore } from '../stores/investmentStore'
 import type { Investment } from '@/types'
 import {
   EllipsisVerticalIcon,
@@ -11,6 +11,8 @@ import {
   ArrowTrendingDownIcon,
   ArrowPathIcon,
 } from '@heroicons/vue/24/outline' // Using outline for a cleaner look
+
+import { formatCurrency } from '@/utils/formatters' // Utility for formatting currency
 
 const props = defineProps<{
   investment: Investment
@@ -133,7 +135,7 @@ const totalGainLossPercent = computed(() => {
       <div class="flex justify-between items-baseline mb-4">
         <!-- Case 1: Price is successfully loaded -->
         <p v-if="investment.currentPrice" class="text-3xl font-bold">
-          ${{ investment.currentPrice.toFixed(2) }}
+          {{ formatCurrency(investment.currentPrice) }}
         </p>
         <!-- Case 2: There is an error -->
         <p v-else-if="investment.error" class="text-lg font-bold text-brand-danger">Failed</p>
@@ -175,7 +177,7 @@ const totalGainLossPercent = computed(() => {
         </div>
         <div class="flex justify-between text-sm mb-2">
           <span class="text-brand-secondary">Total Value</span>
-          <span>${{ totalValue.toFixed(2) }}</span>
+          <span>{{ formatCurrency(totalValue) }}</span>
         </div>
 
         <div class="border-t border-gray-600 pt-4">
@@ -185,16 +187,16 @@ const totalGainLossPercent = computed(() => {
           </div>
           <div class="flex justify-between text-sm mb-2">
             <span class="text-brand-secondary">Total Value</span>
-            <span>${{ totalValue.toFixed(2) }}</span>
+            <span>{{ formatCurrency(totalValue) }}</span>
           </div>
 
           <!-- Only show Gain/Loss if we have a current price -->
           <div v-if="investment.currentPrice" class="flex justify-between text-sm font-bold">
             <span class="text-brand-secondary">Total Gain/Loss</span>
             <span :class="totalGainLoss >= 0 ? 'text-brand-primary' : 'text-brand-danger'">
-              {{ totalGainLoss >= 0 ? '+' : '' }}${{ totalGainLoss.toFixed(2) }} ({{
-                totalGainLossPercent.toFixed(2)
-              }}%)
+              {{ totalGainLoss >= 0 ? '+' : '' }}{{ formatCurrency(totalGainLoss) }} ({{
+                formatCurrency(totalGainLossPercent)
+              }})
             </span>
           </div>
           <div v-else class="flex justify-between text-sm font-bold">
