@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { useInvestmentStore } from '../stores/investmentStore' // Corrected path alias
+import { useExpenseStore } from '@/stores/expenseStore'
 import AddInvestmentForm from '@/components/AddInvestmentForm.vue'
 import PortfolioPieChart from '@/components/PortfolioPieChart.vue' // Import the new chart component
 import InvestmentCard from '@/components/InvestmentCard.vue'
 import { computed, onMounted } from 'vue'
 import { ArrowTrendingDownIcon, ArrowTrendingUpIcon } from '@heroicons/vue/24/solid'
+import ExpenseDoughnutChart from '@/components/ExpenseDoughnutChart.vue'
 
 import { ref } from 'vue'
 
 const investmentStore = useInvestmentStore()
+const expenseStore = useExpenseStore()
 const isAddFormVisible = ref(false)
 const totalReturn = computed(
   () => investmentStore.portfolioCurrentValue - investmentStore.portfolioTotalCost,
@@ -85,14 +88,21 @@ onMounted(() => {
           />
         </div>
       </div>
-      <!-- Card 3: Total Invested -->
+      <!-- Card 3: Monthly Spending -->
+      <div class="card">
+        <p class="text-sm text-brand-secondary mb-1">Monthly Spending</p>
+        <p class="text-3xl font-bold text-white">
+          ${{ expenseStore.totalExpensesThisMonth.toFixed(2) }}
+        </p>
+      </div>
+      <!-- Card 4: Total Invested -->
       <div class="card">
         <p class="text-sm text-brand-secondary mb-1">Total Invested</p>
         <p class="text-3xl font-bold text-white">
           ${{ investmentStore.portfolioTotalCost.toFixed(2) }}
         </p>
       </div>
-      <!-- Card 4: Total Return -->
+      <!-- Card 5: Total Return -->
       <div class="card">
         <div class="flex justify-between items-start">
           <div>
@@ -131,7 +141,11 @@ onMounted(() => {
       </div>
 
       <!-- Right Column: Investments List -->
-      <div class="lg:col-span-2">
+      <div class="lg:col-span-1">
+        <ExpenseDoughnutChart
+          v-if="expenseStore.expenses.length > 0"
+          :expenses="expenseStore.expenses"
+        />
         <h2 class="text-2xl font-bold text-white mb-4">Your Investments</h2>
         <div v-if="investmentStore.investments.length > 0">
           <TransitionGroup name="fade" tag="div" class="grid grid-cols-1 md:grid-cols-2 gap-4">
