@@ -57,6 +57,21 @@ export const useInvestmentStore = defineStore('investment', () => {
       return total
     }, 0),
   )
+  // NEW GETTER: Investments grouped by month
+
+  const investmentsByMonth = computed(() => {
+    const monthlyData: Record<string, number> = {}
+    investments.value.forEach((inv) => {
+      // THIS IS THE FIX:
+      // Only process investments that have a dateAdded property.
+      if (inv.dateAdded) {
+        const month = inv.dateAdded.slice(0, 7) // 'YYYY-MM'
+        const cost = inv.shares * inv.purchasePrice
+        monthlyData[month] = (monthlyData[month] || 0) + cost
+      }
+    })
+    return monthlyData
+  })
 
   // --- ACTIONS ---
   // async function fetchSinglePrice(investment: Investment) {
@@ -124,8 +139,13 @@ export const useInvestmentStore = defineStore('investment', () => {
       investment.error = error.message
     }
   }
-  function addInvestment(newInvestment: Investment) {
+  function addInvestment(id: string, newInvestmentData: Omit<Investment, 'id' | 'dateAdded'>) {
     // ... (existing addInvestment function is the same)
+    const newInvestment: Investment = {
+      ...newInvestmentData,
+      id: id.toUpperCase(), // Use the provided id
+      dateAdded: new Date().toISOString().slice(0, 10), // Add today's date
+    }
     const existing = investments.value.find((inv) => inv.id === newInvestment.id)
     if (existing) {
       alert('Investment already exists!')
@@ -220,6 +240,7 @@ export const useInvestmentStore = defineStore('investment', () => {
     portfolioTotalCost,
     portfolioCurrentValue,
     portfolioTodayGainLoss,
+    investmentsByMonth,
     addInvestment,
     deleteInvestment,
     updateInvestment,

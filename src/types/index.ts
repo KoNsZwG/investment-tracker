@@ -5,6 +5,7 @@ export interface Investment {
   shares: number
   purchasePrice: number
   currentPrice?: number
+  dateAdded: string
   dailyChange?: number
   dailyChangePercent?: number
   error?: string

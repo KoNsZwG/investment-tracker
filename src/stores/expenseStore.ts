@@ -33,6 +33,14 @@ export const useExpenseStore = defineStore('expense', () => {
       })
       .reduce((total, expense) => total + expense.amount, 0)
   })
+  const expensesByMonth = computed(() => {
+    const monthlyData: Record<string, number> = {}
+    expenses.value.forEach((exp) => {
+      const month = exp.date.slice(0, 7) // 'YYYY-MM'
+      monthlyData[month] = (monthlyData[month] || 0) + exp.amount
+    })
+    return monthlyData
+  })
 
   // --- ACTIONS ---
   function addExpense(newExpenseData: Omit<Expense, 'id'>) {
@@ -50,6 +58,7 @@ export const useExpenseStore = defineStore('expense', () => {
   return {
     expenses,
     totalExpensesThisMonth,
+    expensesByMonth,
     addExpense,
     deleteExpense,
   }
