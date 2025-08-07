@@ -50,7 +50,7 @@ function handleSubmit() {
           type="text"
           id="ticker"
           placeholder="e.g., AAPL"
-          class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-green-500 focus:border-green-500"
+          class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-green-500 focus:border-green-500 px-2 py-1"
         />
       </div>
       <!-- Name Input -->
@@ -61,7 +61,7 @@ function handleSubmit() {
           type="text"
           id="name"
           placeholder="e.g., Apple Inc."
-          class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-green-500 focus:border-green-500"
+          class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-green-500 focus:border-green-500 px-2 py-1"
         />
       </div>
       <!-- Shares Input -->
@@ -73,7 +73,7 @@ function handleSubmit() {
           id="shares"
           step="any"
           placeholder="e.g., 10"
-          class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-green-500 focus:border-green-500"
+          class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-green-500 focus:border-green-500 px-2 py-1"
         />
       </div>
       <!-- Purchase Price Input -->
@@ -87,7 +87,7 @@ function handleSubmit() {
           id="purchasePrice"
           step="any"
           placeholder="e.g., 150.00"
-          class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-green-500 focus:border-green-500"
+          class="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-green-500 focus:border-green-500 px-2 py-1"
         />
       </div>
     </div>

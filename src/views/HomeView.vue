@@ -10,7 +10,7 @@ import { onMounted } from 'vue'
 const investmentStore = useInvestmentStore()
 
 onMounted(() => {
-  investmentStore.fetchLivePrices()
+  investmentStore.fetchAllLivePrices()
 })
 </script>
 
@@ -27,7 +27,7 @@ onMounted(() => {
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold text-white">Portfolio Summary</h2>
           <button
-            @click="investmentStore.fetchLivePrices"
+            @click="investmentStore.fetchAllLivePrices"
             class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             :disabled="investmentStore.isLoading"
           >

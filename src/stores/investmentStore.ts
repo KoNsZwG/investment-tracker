@@ -4,7 +4,6 @@ import { ref, computed, watch } from 'vue' // <-- Import 'watch'
 import type { Investment } from '@/types'
 
 const alphaVantageApiKey = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY
-// const apiKey = import.meta.env.VITE_FMP_API_KEY <-- This is not used anymore, so we can remove it
 const LOCAL_STORAGE_KEY = 'my_investment_portfolio'
 
 export const useInvestmentStore = defineStore('investment', () => {
@@ -46,6 +45,32 @@ export const useInvestmentStore = defineStore('investment', () => {
   )
 
   // --- ACTIONS ---
+  async function fetchSinglePrice(investment: Investment) {
+    if (!alphaVantageApiKey) return
+
+    investment.error = undefined
+    investment.currentPrice = undefined
+
+    try {
+      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${investment.id}&apikey=${alphaVantageApiKey}`
+      const response = await fetch(url)
+      if (!response.ok) throw new Error('API request failed')
+
+      const data = await response.json()
+      const quote = data['Global Quote']
+
+      if (data.Note) throw new Error('API limit reached.')
+      if (quote && quote['05. price'] && Object.keys(quote).length > 0) {
+        investment.currentPrice = parseFloat(quote['05. price'])
+      } else {
+        throw new Error('Invalid ticker.')
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error(`Failed to fetch price for ${investment.id}:`, error)
+      investment.error = error.message
+    }
+  }
   function addInvestment(newInvestment: Investment) {
     // ... (existing addInvestment function is the same)
     const existing = investments.value.find((inv) => inv.id === newInvestment.id)
@@ -54,7 +79,7 @@ export const useInvestmentStore = defineStore('investment', () => {
       return
     }
     investments.value.push(newInvestment)
-    fetchLivePrices()
+    fetchSinglePrice(newInvestment)
   }
 
   // NEW ACTION: Delete an investment by its ID
@@ -62,7 +87,20 @@ export const useInvestmentStore = defineStore('investment', () => {
     investments.value = investments.value.filter((inv) => inv.id !== investmentId)
   }
 
-  async function fetchLivePrices() {
+  // NEW ACTION: Find an investment by its ID and update its data
+  function updateInvestment(
+    investmentId: string,
+    updatedData: { shares: number; purchasePrice: number },
+  ) {
+    const investment = investments.value.find((inv) => inv.id === investmentId)
+    if (investment) {
+      investment.shares = updatedData.shares
+      investment.purchasePrice = updatedData.purchasePrice
+      // After updating, let's re-fetch prices to update the current value
+    }
+  }
+
+  async function fetchAllLivePrices() {
     if (!alphaVantageApiKey) {
       console.error('Alpha Vantage API key is missing!')
       return
@@ -87,7 +125,7 @@ export const useInvestmentStore = defineStore('investment', () => {
 
         // Alpha Vantage sends a "Note" when you hit the API limit
         if (data.Note) {
-          throw new Error('API limit reached. Please wait a minute.')
+          throw new Error('API limit reached. Try again later.')
         }
 
         if (quote && quote['05. price'] && Object.keys(quote).length > 0) {
@@ -126,6 +164,8 @@ export const useInvestmentStore = defineStore('investment', () => {
     portfolioCurrentValue,
     addInvestment,
     deleteInvestment,
-    fetchLivePrices,
+    updateInvestment,
+    fetchSinglePrice,
+    fetchAllLivePrices,
   }
 })
