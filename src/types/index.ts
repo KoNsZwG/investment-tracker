@@ -9,6 +9,7 @@ export interface Investment {
   dailyChange?: number
   dailyChangePercent?: number
   error?: string
+  lastFetched?: number
 }
 
 export interface Expense {

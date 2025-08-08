@@ -7,6 +7,8 @@ const fmpApiKey = import.meta.env.VITE_FMP_API_KEY
 // const alphaVantageApiKey = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY
 const LOCAL_STORAGE_KEY = 'my_investment_portfolio'
 
+const CACHE_DURATION_MS = 15 * 60 * 1000 // 15 minutes in milliseconds
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -109,28 +111,32 @@ export const useInvestmentStore = defineStore('investment', () => {
       return
     }
 
+    // --- CACHING LOGIC ---
+    const now = Date.now()
+    if (investment.lastFetched && now - investment.lastFetched < CACHE_DURATION_MS) {
+      console.log(`Using cached price for ${investment.id}.`)
+      return // Exit the function, do not make an API call
+    }
+
+    // --- IF CACHE IS STALE, PROCEED WITH FETCH ---
     investment.error = undefined
     investment.currentPrice = undefined
-    investment.dailyChange = undefined
-    investment.dailyChangePercent = undefined
+    // ... (rest of the fetch logic is the same)
 
     try {
-      // FMP's endpoint is simpler
       const url = `https://financialmodelingprep.com/api/v3/quote/${investment.id}?apikey=${fmpApiKey}`
       const response = await fetch(url)
       if (!response.ok) throw new Error('API request failed')
 
       const data = await response.json()
-
-      // FMP returns an array, even for a single ticker. We need the first item.
       const quote = data[0]
 
       if (quote && quote.price) {
         investment.currentPrice = quote.price
         investment.dailyChange = quote.change
         investment.dailyChangePercent = quote.changesPercentage
+        investment.lastFetched = Date.now() // <-- SET THE TIMESTAMP on successful fetch
       } else {
-        // This happens if the ticker is invalid on FMP
         throw new Error('Invalid ticker or no data available.')
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,6 +145,7 @@ export const useInvestmentStore = defineStore('investment', () => {
       investment.error = error.message
     }
   }
+
   function addInvestment(id: string, newInvestmentData: Omit<Investment, 'id' | 'dateAdded'>) {
     // ... (existing addInvestment function is the same)
     const newInvestment: Investment = {
