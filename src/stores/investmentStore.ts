@@ -4,10 +4,8 @@ import { ref, computed, watch } from 'vue' // <-- Import 'watch'
 import type { Investment } from '@/types'
 
 const fmpApiKey = import.meta.env.VITE_FMP_API_KEY
-// const alphaVantageApiKey = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY
+const alphaVantageApiKey = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY
 const LOCAL_STORAGE_KEY = 'my_investment_portfolio'
-
-const CACHE_DURATION_MS = 15 * 60 * 1000 // 15 minutes in milliseconds
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -75,69 +73,76 @@ export const useInvestmentStore = defineStore('investment', () => {
     return monthlyData
   })
 
-  // --- ACTIONS ---
-  // async function fetchSinglePrice(investment: Investment) {
-  //   if (!alphaVantageApiKey) return
-
-  //   investment.error = undefined
-  //   investment.currentPrice = undefined
-
-  //   try {
-  //     const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${investment.id}&apikey=${alphaVantageApiKey}`
-  //     const response = await fetch(url)
-  //     if (!response.ok) throw new Error('API request failed')
-
-  //     const data = await response.json()
-  //     const quote = data['Global Quote']
-
-  //     if (data.Note) throw new Error('API limit reached.')
-  //     if (quote && quote['05. price'] && Object.keys(quote).length > 0) {
-  //       investment.currentPrice = parseFloat(quote['05. price'])
-  //       investment.dailyChange = parseFloat(quote['09. change'])
-  //       investment.dailyChangePercent = parseFloat(quote['10. change percent'].replace('%', ''))
-  //     } else {
-  //       throw new Error('Invalid ticker.')
-  //     }
-  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   } catch (error: any) {
-  //     console.error(`Failed to fetch price for ${investment.id}:`, error)
-  //     investment.error = error.message
-  //   }
-  // }
-
   async function fetchSinglePrice(investment: Investment) {
-    if (!fmpApiKey) {
-      console.error('FMP API key is missing!')
-      return
-    }
-
-    // --- CACHING LOGIC ---
+    // --- Caching logic (remains the same) ---
+    const CACHE_DURATION_MS = 15 * 60 * 1000
     const now = Date.now()
     if (investment.lastFetched && now - investment.lastFetched < CACHE_DURATION_MS) {
       console.log(`Using cached price for ${investment.id}.`)
-      return // Exit the function, do not make an API call
+      return
     }
 
-    // --- IF CACHE IS STALE, PROCEED WITH FETCH ---
+    // --- Clear old data before fetching ---
     investment.error = undefined
     investment.currentPrice = undefined
-    // ... (rest of the fetch logic is the same)
+    investment.dailyChange = undefined
+    investment.dailyChangePercent = undefined
 
     try {
-      const url = `https://financialmodelingprep.com/api/v3/quote/${investment.id}?apikey=${fmpApiKey}`
-      const response = await fetch(url)
-      if (!response.ok) throw new Error('API request failed')
+      let quote // A variable to hold the parsed quote data
 
-      const data = await response.json()
-      const quote = data[0]
+      // --- API ROUTING LOGIC ---
+      if (investment.id.includes('.')) {
+        // --- ALPHA VANTAGE LOGIC (for ETFs like VUAA.L) ---
+        console.log(`Fetching ${investment.id} from Alpha Vantage...`)
+        if (!alphaVantageApiKey) throw new Error('Alpha Vantage API key is missing.')
 
-      if (quote && quote.price) {
+        const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${investment.id}&apikey=${alphaVantageApiKey}`
+        const response = await fetch(url)
+        if (!response.ok) throw new Error('Alpha Vantage API request failed')
+        const data = await response.json()
+
+        if (data.Note) throw new Error('Alpha Vantage API limit reached.')
+
+        const avQuote = data['Global Quote']
+        if (avQuote && avQuote['05. price'] && Object.keys(avQuote).length > 0) {
+          quote = {
+            price: parseFloat(avQuote['05. price']),
+            change: parseFloat(avQuote['09. change']),
+            changesPercentage: parseFloat(avQuote['10. change percent'].replace('%', '')),
+          }
+        } else {
+          throw new Error('Invalid ticker or no data available from Alpha Vantage.')
+        }
+      } else {
+        // --- FMP LOGIC (for stocks like AAPL and crypto like BTCUSD) ---
+        console.log(`Fetching ${investment.id} from FMP...`)
+        if (!fmpApiKey) throw new Error('FMP API key is missing.')
+
+        const url = `https://financialmodelingprep.com/api/v3/quote/${investment.id}?apikey=${fmpApiKey}`
+        const response = await fetch(url)
+        if (!response.ok) throw new Error('FMP API request failed')
+        const data = await response.json()
+
+        const fmpQuote = data[0]
+        if (fmpQuote && fmpQuote.price) {
+          quote = {
+            price: fmpQuote.price,
+            change: fmpQuote.change,
+            changesPercentage: fmpQuote.changesPercentage,
+          }
+        } else {
+          throw new Error('Invalid ticker or no data available from FMP.')
+        }
+      }
+
+      // --- UNIFIED DATA ASSIGNMENT ---
+      // After getting the quote from either API, assign it to our investment.
+      if (quote) {
         investment.currentPrice = quote.price
         investment.dailyChange = quote.change
         investment.dailyChangePercent = quote.changesPercentage
-        investment.lastFetched = Date.now() // <-- SET THE TIMESTAMP on successful fetch
-      } else {
-        throw new Error('Invalid ticker or no data available.')
+        investment.lastFetched = Date.now()
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

@@ -24,8 +24,8 @@ import { RouterLink } from 'vue-router'
             <RouterLink :to="{ name: 'portfolio' }" class="nav-link">Portfolio</RouterLink>
             <RouterLink :to="{ name: 'expenses' }" class="nav-link">Expenses</RouterLink>
             <RouterLink :to="{ name: 'analytics' }" class="nav-link">Analytics</RouterLink>
+            <RouterLink :to="{ name: 'news' }" class="nav-link">News</RouterLink>
             <a href="#" class="nav-link-disabled">Research</a>
-            <a href="#" class="nav-link-disabled">News</a>
           </div>
         </div>
 
