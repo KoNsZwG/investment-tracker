@@ -29,9 +29,7 @@ const isMobileMenuOpen = ref(false)
             <RouterLink :to="{ name: 'portfolio' }" class="nav-link">Portfolio</RouterLink>
             <RouterLink :to="{ name: 'expenses' }" class="nav-link">Expenses</RouterLink>
             <RouterLink :to="{ name: 'analytics' }" class="nav-link">Analytics</RouterLink>
-
-            <a href="#" class="nav-link-disabled">Research</a>
-            <a href="#" class="nav-link-disabled">News</a>
+            <RouterLink :to="{ name: 'news' }" class="nav-link">News</RouterLink>
           </div>
         </div>
 
