@@ -1,8 +1,10 @@
 // src/views/NewsView.vue
 <script setup lang="ts">
+// 1. Import the CORRECT function name
 import { useNewsStore } from '@/stores/newsStore'
 import { onMounted } from 'vue'
 
+// 2. CALL the function to create the store instance
 const newsStore = useNewsStore()
 
 onMounted(() => {

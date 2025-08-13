@@ -2,7 +2,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-// A simple type for a news article
 export interface NewsArticle {
   title: string
   description: string
@@ -13,31 +12,34 @@ export interface NewsArticle {
   }
 }
 
-const newsApiKey = import.meta.env.VITE_NEWS_API_KEY
-
+// THIS IS THE WRAPPER THAT WAS LIKELY MISSING/MODIFIED
 export const useNewsStore = defineStore('news', () => {
   const articles = ref<NewsArticle[]>([])
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
   async function fetchTopHeadlines() {
-    if (articles.value.length > 0) return // Simple cache to prevent re-fetching
+    if (articles.value.length > 0) return
 
     isLoading.value = true
     error.value = null
     try {
-      if (!newsApiKey) throw new Error('News API key is missing.')
-
-      const url = `https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=${newsApiKey}`
+      const url = `/api/news`
       const response = await fetch(url)
-      if (!response.ok) throw new Error('Failed to fetch news headlines.')
+      if (!response.ok) throw new Error('Failed to fetch news headlines from our server.')
 
       const data = await response.json()
+      if (data.error) throw new Error(data.error)
+
       articles.value = data.articles
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      error.value = err.message
-      console.error('Error fetching news:', err)
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        error.value = err.message
+        console.error('Error fetching news:', err)
+      } else {
+        error.value = String(err)
+        console.error('Error fetching news:', err)
+      }
     } finally {
       isLoading.value = false
     }
