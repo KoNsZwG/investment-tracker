@@ -4,6 +4,7 @@ import { useInvestmentStore } from '@/stores/investmentStore'
 import InvestmentCard from '@/components/InvestmentCard.vue'
 import AddInvestmentForm from '@/components/AddInvestmentForm.vue'
 import { onMounted, ref } from 'vue'
+import { PlusIcon, TrashIcon } from '@heroicons/vue/24/solid'
 
 const investmentStore = useInvestmentStore()
 const isAddFormVisible = ref(false)
@@ -22,26 +23,24 @@ function handleClearPortfolio() {
 <template>
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="flex justify-between items-center mb-8">
-      <div class="text-left">
-        <h1 class="text-3xl font-bold text-white">My Investments</h1>
-        <p class="text-brand-secondary mt-2">Manage your stock and ETF holdings.</p>
-      </div>
-      <div>
-        <div class="flex space-x-2">
-          <button
-            @click="handleClearPortfolio"
-            v-if="investmentStore.investments.length > 0"
-            class="bg-brand-danger hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg"
-          >
-            Clear All
-          </button>
-          <button
-            @click="isAddFormVisible = !isAddFormVisible"
-            class="bg-brand-primary hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center"
-          >
-            <span class="mr-2">+</span> Add Investment
-          </button>
-        </div>
+      <div class="flex space-x-2 justify-end">
+        <button
+          @click="handleClearPortfolio"
+          v-if="investmentStore.investments.length > 0"
+          class="bg-brand-danger hover:bg-red-600 text-white font-bold py-2 px-3 rounded-lg flex items-center text-sm"
+        >
+          <TrashIcon class="h-5 w-5 md:mr-2" />
+          <span class="hidden md:inline">Clear All</span>
+          <!-- Hide text on mobile -->
+        </button>
+        <button
+          @click="isAddFormVisible = !isAddFormVisible"
+          class="bg-brand-primary hover:bg-green-600 text-white font-bold py-2 px-3 rounded-lg flex items-center text-sm"
+        >
+          <PlusIcon class="h-5 w-5 md:mr-2" />
+          <span class="hidden md:inline">Add Investment</span>
+          <!-- Hide text on mobile -->
+        </button>
       </div>
     </div>
 

@@ -1,10 +1,15 @@
+// src/components/TheNavbar.vue
+
 <script setup lang="ts">
-import { ChartBarIcon, BellIcon } from '@heroicons/vue/24/solid'
+import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { ChartBarIcon, BellIcon, Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
+
+const isMobileMenuOpen = ref(false)
 </script>
 
 <template>
-  <nav class="bg-brand-dark shadow-md">
+  <nav class="bg-brand-dark border-b border-brand-border">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <!-- Logo Section -->
@@ -17,47 +22,74 @@ import { RouterLink } from 'vue-router'
           </div>
         </div>
 
-        <!-- Navigation Links -->
+        <!-- Desktop Navigation Links -->
         <div class="hidden md:block">
           <div class="ml-10 flex items-baseline space-x-4">
             <RouterLink :to="{ name: 'dashboard' }" class="nav-link">Dashboard</RouterLink>
             <RouterLink :to="{ name: 'portfolio' }" class="nav-link">Portfolio</RouterLink>
             <RouterLink :to="{ name: 'expenses' }" class="nav-link">Expenses</RouterLink>
             <RouterLink :to="{ name: 'analytics' }" class="nav-link">Analytics</RouterLink>
-            <RouterLink :to="{ name: 'news' }" class="nav-link">News</RouterLink>
+
             <a href="#" class="nav-link-disabled">Research</a>
+            <a href="#" class="nav-link-disabled">News</a>
           </div>
         </div>
 
-        <!-- Profile/Notifications (Placeholder) -->
+        <!-- Desktop Profile/Notifications -->
         <div class="hidden md:block">
-          <div class="ml-4 flex items-center md:ml-6 space-x-4">
-            <button
-              type="button"
-              class="p-1 rounded-full text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-            >
-              <span class="sr-only">View notifications</span>
+          <div class="hidden ml-4 flex items-center md:ml-6 space-x-4">
+            <button type="button" class="p-1 rounded-full text-gray-400 hover:text-white">
               <BellIcon class="h-6 w-6" aria-hidden="true" />
             </button>
-
-            <!-- Profile dropdown placeholder -->
-            <div class="ml-3 relative">
-              <div>
-                <button
-                  type="button"
-                  class="max-w-xs bg-gray-800 rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
-                  id="user-menu-button"
-                  aria-expanded="false"
-                  aria-haspopup="true"
-                >
-                  <span class="sr-only">Open user menu</span>
-                  <!-- Placeholder for profile image -->
-                  <div class="h-8 w-8 rounded-full bg-brand-secondary"></div>
-                </button>
-              </div>
-            </div>
+            <div class="h-8 w-8 rounded-full bg-brand-secondary"></div>
           </div>
         </div>
+
+        <!-- Mobile Menu Button -->
+        <div class="-mr-2 flex md:hidden">
+          <button
+            @click="isMobileMenuOpen = !isMobileMenuOpen"
+            type="button"
+            class="bg-gray-800 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700"
+          >
+            <span class="sr-only">Open main menu</span>
+            <Bars3Icon v-if="!isMobileMenuOpen" class="block h-6 w-6" aria-hidden="true" />
+            <XMarkIcon v-else class="block h-6 w-6" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Menu Panel -->
+    <div v-if="isMobileMenuOpen" class="md:hidden">
+      <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <RouterLink
+          :to="{ name: 'dashboard' }"
+          class="mobile-nav-link"
+          @click="isMobileMenuOpen = false"
+          >Dashboard</RouterLink
+        >
+        <RouterLink
+          :to="{ name: 'portfolio' }"
+          class="mobile-nav-link"
+          @click="isMobileMenuOpen = false"
+          >Portfolio</RouterLink
+        >
+        <RouterLink
+          :to="{ name: 'expenses' }"
+          class="mobile-nav-link"
+          @click="isMobileMenuOpen = false"
+          >Expenses</RouterLink
+        >
+        <RouterLink
+          :to="{ name: 'analytics' }"
+          class="mobile-nav-link"
+          @click="isMobileMenuOpen = false"
+          >Analytics</RouterLink
+        >
+        <RouterLink :to="{ name: 'news' }" class="mobile-nav-link" @click="isMobileMenuOpen = false"
+          >News</RouterLink
+        >
       </div>
     </div>
   </nav>
@@ -65,12 +97,14 @@ import { RouterLink } from 'vue-router'
 
 <style scoped>
 .nav-link {
-  @apply text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium;
+  @apply text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors;
 }
 .nav-link-disabled {
   @apply text-gray-500 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed;
 }
-/* This class is automatically applied by Vue Router to the active link */
+.mobile-nav-link {
+  @apply text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium;
+}
 .router-link-exact-active {
   @apply bg-gray-900 text-white;
 }

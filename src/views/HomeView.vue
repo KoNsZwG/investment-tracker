@@ -22,9 +22,11 @@ onMounted(() => {
 
 <template>
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="text-left mb-8">
-      <h1 class="text-3xl font-bold text-white">Dashboard Overview</h1>
-      <p class="text-brand-secondary mt-2">A high-level overview of your financial status.</p>
+    <div class="flex flex-col md:flex-row justify-between md:items-center mb-8">
+      <div class="text-left mb-8 md:mb-0">
+        <h1 class="text-2xl md:text-3xl font-bold text-white">Dashboard Overview</h1>
+        <p class="text-brand-secondary mt-2">A high-level overview of your financial status.</p>
+      </div>
     </div>
 
     <!-- Portfolio Summary Grid -->
