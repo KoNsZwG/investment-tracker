@@ -151,19 +151,24 @@ export const useInvestmentStore = defineStore('investment', () => {
     }
   }
 
-  function addInvestment(id: string, newInvestmentData: Omit<Investment, 'id' | 'dateAdded'>) {
-    // ... (existing addInvestment function is the same)
-    const newInvestment: Investment = {
-      ...newInvestmentData,
-      id: id.toUpperCase(), // Use the provided id
-      dateAdded: new Date().toISOString().slice(0, 10), // Add today's date
-    }
-    const existing = investments.value.find((inv) => inv.id === newInvestment.id)
+  function addInvestment(newInvestmentData: Omit<Investment, 'dateAdded'>) {
+    // Check if an investment with the same ID already exists
+    const existing = investments.value.find(
+      (inv) => inv.id.toUpperCase() === newInvestmentData.id.toUpperCase(),
+    )
     if (existing) {
       alert('Investment already exists!')
       return
     }
-    investments.value.push(newInvestment)
+
+    // Create the final Investment object, adding the date
+    const newInvestment: Investment = {
+      ...newInvestmentData,
+      id: newInvestmentData.id.toUpperCase(), // Standardize to uppercase
+      dateAdded: new Date().toISOString().slice(0, 10),
+    }
+
+    investments.value.unshift(newInvestment) // Add to the beginning of the list
     fetchSinglePrice(newInvestment)
   }
 

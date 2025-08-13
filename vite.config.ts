@@ -24,6 +24,15 @@ export default defineConfig(({ mode }) => {
           rewrite: () =>
             `/v2/top-headlines?country=us&category=business&apiKey=${env.VITE_NEWS_API_KEY}`,
         },
+        '/api/search': {
+          target: 'https://www.alphavantage.co',
+          changeOrigin: true,
+          rewrite: (path) => {
+            // Get the keyword from the original path, e.g., 'BA' from '/api/search?keyword=BA'
+            const keyword = path.split('?keyword=')[1]
+            return `/query?function=SYMBOL_SEARCH&keywords=${keyword}&apikey=${env.VITE_ALPHA_VANTAGE_API_KEY}`
+          },
+        },
       },
     },
   }
