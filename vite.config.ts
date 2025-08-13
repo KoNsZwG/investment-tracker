@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
           target: 'https://newsapi.org',
           changeOrigin: true,
           // We rewrite to the full, correct endpoint path here
-          rewrite: (path) =>
+          rewrite: () =>
             `/v2/top-headlines?country=us&category=business&apiKey=${env.VITE_NEWS_API_KEY}`,
         },
       },
