@@ -37,6 +37,7 @@ const handleLogout = async () => {
           <div class="ml-10 flex items-baseline space-x-4">
             <RouterLink :to="{ name: 'dashboard' }" class="nav-link">Dashboard</RouterLink>
             <RouterLink :to="{ name: 'portfolio' }" class="nav-link">Portfolio</RouterLink>
+            <RouterLink :to="{ name: 'income' }" class="nav-link">Income</RouterLink>
             <RouterLink :to="{ name: 'expenses' }" class="nav-link">Expenses</RouterLink>
             <RouterLink :to="{ name: 'analytics' }" class="nav-link">Analytics</RouterLink>
             <RouterLink :to="{ name: 'news' }" class="nav-link">News</RouterLink>
@@ -80,6 +81,12 @@ const handleLogout = async () => {
           class="mobile-nav-link"
           @click="isMobileMenuOpen = false"
           >Portfolio</RouterLink
+        >
+        <RouterLink
+          :to="{ name: 'income' }"
+          class="mobile-nav-link"
+          @click="isMobileMenuOpen = false"
+          >Income</RouterLink
         >
         <RouterLink
           :to="{ name: 'expenses' }"

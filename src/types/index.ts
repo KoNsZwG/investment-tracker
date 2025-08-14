@@ -37,6 +37,14 @@ export interface NewsArticle {
   }
 }
 
+export interface Income {
+  id: string
+  title: string
+  amount: number
+  category: 'Salary' | 'Bonus' | 'Investment' | 'Other' // A more defined category set
+  date: string // 'YYYY-MM-DD'
+}
+
 export interface SearchResult {
   '1. symbol': string
   '2. name': string

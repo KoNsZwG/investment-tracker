@@ -48,6 +48,12 @@ const router = createRouter({
       component: () => import('../views/RegisterView.vue'),
       meta: { requiresGuest: true },
     },
+    {
+      path: '/income',
+      name: 'income',
+      component: () => import('../views/IncomeView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
