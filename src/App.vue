@@ -10,7 +10,7 @@ const authStore = useAuthStore()
   <div class="bg-brand-dark text-white min-h-screen">
     <!-- Only render the app content AFTER the initial auth check is complete -->
     <div v-if="authStore.authReady">
-      <AppNavbar />
+      <AppNavbar v-if="authStore.user" />
       <RouterView />
     </div>
     <div v-else class="flex items-center justify-center h-screen">

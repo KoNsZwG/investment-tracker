@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
   onAuthStateChanged,
   type User,
 } from 'firebase/auth'
@@ -35,5 +36,24 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
-  return { user, authReady, signUp, logIn, logOut, listenForAuthState }
+  async function changePassword(newPassword: string) {
+    if (auth.currentUser) {
+      try {
+        await updatePassword(auth.currentUser, newPassword)
+        alert('Password updated successfully!')
+      } catch (error: unknown) {
+        console.error('Error updating password:', error)
+        // Firebase often requires recent login for this.
+        if (error instanceof Error) {
+          alert(
+            `Error updating password: ${error.message}. You may need to log out and log back in.`,
+          )
+        } else {
+          alert('Error updating password. You may need to log out and log back in.')
+        }
+      }
+    }
+  }
+
+  return { user, authReady, signUp, logIn, logOut, listenForAuthState, changePassword }
 })

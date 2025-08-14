@@ -9,7 +9,7 @@ import {
   BellIcon,
   Bars3Icon,
   XMarkIcon,
-  ArrowLeftOnRectangleIcon,
+  ArrowLeftEndOnRectangleIcon,
 } from '@heroicons/vue/24/outline'
 
 const isNotificationMenuOpen = ref(false)
@@ -26,7 +26,7 @@ const handleLogout = async () => {
 </script>
 
 <template>
-  <nav v-if="authStore.user" class="bg-brand-dark border-b border-brand-border">
+  <nav class="bg-brand-dark border-b border-brand-border">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- This is the main flex container -->
       <div class="flex items-center justify-between h-16">
@@ -80,7 +80,7 @@ const handleLogout = async () => {
                 <div
                   class="h-8 w-8 rounded-full bg-brand-secondary flex items-center justify-center text-white font-bold"
                 >
-                  {{ authStore.user.email?.charAt(0).toUpperCase() }}
+                  {{ authStore.user?.email?.charAt(0).toUpperCase() ?? '' }}
                   <!-- Show first initial -->
                 </div>
               </button>
@@ -89,15 +89,19 @@ const handleLogout = async () => {
                 @mouseleave="isProfileMenuOpen = false"
                 class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-brand-card ring-1 ring-black ring-opacity-5"
               >
-                <div class="px-4 py-2 text-sm text-gray-400 border-b border-brand-border">
-                  {{ authStore.user.email }}
-                </div>
+                <RouterLink
+                  :to="{ name: 'profile' }"
+                  @click="isProfileMenuOpen = false"
+                  class="block px-4 py-2 text-sm text-gray-200 border-b border-brand-border hover:bg-gray-700"
+                >
+                  {{ authStore.user?.email }}
+                </RouterLink>
                 <a
                   href="#"
                   @click.prevent="handleLogout"
                   class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
                 >
-                  <ArrowLeftOnRectangleIcon class="h-5 w-5 mr-2" />
+                  <ArrowLeftEndOnRectangleIcon class="h-5 w-5 mr-2" />
                   <span>Logout</span>
                 </a>
               </div>
