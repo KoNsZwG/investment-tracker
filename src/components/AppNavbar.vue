@@ -44,6 +44,7 @@ const handleLogout = async () => {
               <RouterLink :to="{ name: 'expenses' }" class="nav-link">Expenses</RouterLink>
               <RouterLink :to="{ name: 'analytics' }" class="nav-link">Analytics</RouterLink>
               <RouterLink :to="{ name: 'news' }" class="nav-link">News</RouterLink>
+              <RouterLink :to="{ name: 'about' }" class="nav-link">About</RouterLink>
             </div>
           </div>
         </div>
