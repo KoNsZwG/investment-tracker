@@ -7,43 +7,77 @@ import { ArrowRightEndOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const authStore = useAuthStore()
 const router = useRouter()
+
+const username = ref('') // <-- NEW
 const email = ref('')
 const password = ref('')
+const confirmPassword = ref('') // <-- NEW
 
-// CORRECTED: This is the handler for the registration form
 const handleRegister = async () => {
+  // --- NEW VALIDATION ---
+  if (!username.value || !email.value || !password.value) {
+    alert('Please fill out all fields.')
+    return
+  }
+  if (password.value !== confirmPassword.value) {
+    alert('Passwords do not match.')
+    return
+  }
+  if (password.value.length < 6) {
+    alert('Password must be at least 6 characters long.')
+    return
+  }
+
   try {
-    // CORRECTED: Calls the signUp action from the store
-    await authStore.signUp(email.value, password.value)
-    // On success, redirect to the dashboard
+    // We'll update the signUp action in the next step
+    await authStore.signUp(username.value, email.value, password.value)
     router.push({ name: 'dashboard' })
   } catch (error: unknown) {
-    // On failure, show the error message
-    if (error instanceof Error) {
-      alert(`Error signing up: ${error.message}`)
-    } else {
-      alert('Error signing up: Unknown error')
-    }
+    const errorMsg =
+      error && typeof error === 'object' && 'message' in error
+        ? (error as { message: string }).message
+        : String(error)
+    alert(`Error signing up: ${errorMsg}`)
   }
 }
 </script>
 
 <template>
-  <!-- The v-if check is correct -->
   <div v-if="authStore.authReady" class="flex items-center justify-center min-h-screen">
     <div class="w-full max-w-md card">
       <h2 class="text-2xl font-bold text-white mb-6 text-center">Create an Account</h2>
-      <!-- CORRECTED: The form now correctly calls handleRegister -->
       <form @submit.prevent="handleRegister">
+        <!-- NEW USERNAME FIELD -->
+        <div class="mb-4">
+          <label for="username" class="block text-sm font-medium text-brand-secondary"
+            >Username</label
+          >
+          <input v-model="username" type="text" id="username" class="input-field" required />
+        </div>
+        <!-- EMAIL FIELD -->
         <div class="mb-4">
           <label for="email" class="block text-sm font-medium text-brand-secondary">Email</label>
           <input v-model="email" type="email" id="email" class="input-field" required />
         </div>
+        <!-- PASSWORD FIELD -->
         <div class="mb-6">
           <label for="password" class="block text-sm font-medium text-brand-secondary"
             >Password</label
           >
           <input v-model="password" type="password" id="password" class="input-field" required />
+        </div>
+        <!-- NEW CONFIRM PASSWORD FIELD -->
+        <div class="mb-6">
+          <label for="confirm-password" class="block text-sm font-medium text-brand-secondary"
+            >Confirm Password</label
+          >
+          <input
+            v-model="confirmPassword"
+            type="password"
+            id="confirm-password"
+            class="input-field"
+            required
+          />
         </div>
         <button type="submit" class="btn-primary w-full flex items-center justify-center">
           <ArrowRightEndOnRectangleIcon class="h-5 w-5 mr-2" />
@@ -58,10 +92,7 @@ const handleRegister = async () => {
       </p>
     </div>
   </div>
-  <!-- Add a loading state for a better UX -->
-  <div v-else class="flex items-center justify-center h-screen">
-    <p>Loading...</p>
-  </div>
+  <div v-else class="flex items-center justify-center h-screen"><p>Loading...</p></div>
 </template>
 
 <style scoped>

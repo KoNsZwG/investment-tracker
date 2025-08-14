@@ -10,6 +10,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   ArrowLeftEndOnRectangleIcon,
+  Cog6ToothIcon,
 } from '@heroicons/vue/24/outline'
 
 const isNotificationMenuOpen = ref(false)
@@ -80,8 +81,10 @@ const handleLogout = async () => {
                 <div
                   class="h-8 w-8 rounded-full bg-brand-secondary flex items-center justify-center text-white font-bold"
                 >
-                  {{ authStore.user?.email?.charAt(0).toUpperCase() ?? '' }}
-                  <!-- Show first initial -->
+                  {{
+                    authStore.user?.displayName?.charAt(0).toUpperCase() ||
+                    authStore.user?.email?.charAt(0).toUpperCase()
+                  }}
                 </div>
               </button>
               <div
@@ -89,13 +92,17 @@ const handleLogout = async () => {
                 @mouseleave="isProfileMenuOpen = false"
                 class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-brand-card ring-1 ring-black ring-opacity-5"
               >
+                <!-- NEW: Link to the Profile page -->
                 <RouterLink
                   :to="{ name: 'profile' }"
                   @click="isProfileMenuOpen = false"
-                  class="block px-4 py-2 text-sm text-gray-200 border-b border-brand-border hover:bg-gray-700"
+                  class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
                 >
-                  {{ authStore.user?.email }}
+                  <Cog6ToothIcon class="h-5 w-5 mr-2" />
+                  <span>Profile & Settings</span>
                 </RouterLink>
+
+                <!-- Logout Button -->
                 <a
                   href="#"
                   @click.prevent="handleLogout"

@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/authStore'
 const authStore = useAuthStore()
 const newPassword = ref('')
 const confirmPassword = ref('')
-
+const newUsername = ref(authStore.user?.displayName || '')
 async function handleChangePassword() {
   if (!newPassword.value) {
     alert('Please enter a new password.')
@@ -26,20 +26,45 @@ async function handleChangePassword() {
   newPassword.value = ''
   confirmPassword.value = ''
 }
+
+// Handler for the username form
+async function handleUpdateUsername() {
+  if (!newUsername.value) {
+    alert('Please enter a username.')
+    return
+  }
+  await authStore.updateUsername(newUsername.value)
+}
 </script>
 
 <template>
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h1 class="text-3xl font-bold text-white">My Profile</h1>
 
-    <div class="card mt-8 max-w-lg">
-      <div class="mb-6">
+    <div class="card mt-8 max-w-lg space-y-8">
+      <!-- Account Info Section -->
+      <div>
         <h2 class="text-xl font-bold text-white">Account Information</h2>
-        <p class="text-brand-secondary mt-2">
+        <p class="text-brand-secondary mt-4">
           Email: <span class="font-medium text-white">{{ authStore.user?.email }}</span>
         </p>
       </div>
 
+      <!-- Update Username Form -->
+      <form @submit.prevent="handleUpdateUsername">
+        <h2 class="text-xl font-bold text-white">Update Username</h2>
+        <div class="mt-4">
+          <label for="username" class="block text-sm font-medium text-brand-secondary"
+            >Username</label
+          >
+          <input v-model="newUsername" type="text" id="username" class="input-field mt-1" />
+        </div>
+        <div class="mt-6">
+          <button type="submit" class="btn-primary w-full">Update Username</button>
+        </div>
+      </form>
+
+      <!-- Change Password Form -->
       <form @submit.prevent="handleChangePassword">
         <h2 class="text-xl font-bold text-white">Change Password</h2>
         <div class="mt-4 space-y-4">
@@ -67,7 +92,8 @@ async function handleChangePassword() {
           </div>
         </div>
         <div class="mt-6">
-          <button type="submit" class="btn-primary">Update Password</button>
+          <!-- APPLIED 'w-full' for consistency -->
+          <button type="submit" class="btn-primary w-full">Update Password</button>
         </div>
       </form>
     </div>

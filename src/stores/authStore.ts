@@ -6,9 +6,10 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  updatePassword,
+  updateProfile,
   onAuthStateChanged,
   type User,
+  updatePassword,
 } from 'firebase/auth'
 // NO MORE ROUTER IMPORT
 
@@ -16,9 +17,17 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
   const authReady = ref(false)
 
-  async function signUp(email: string, password: string) {
-    // No more try/catch or router.push here. We let the component handle it.
-    await createUserWithEmailAndPassword(auth, email, password)
+  async function signUp(username: string, email: string, password: string) {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+
+    if (userCredential.user) {
+      // After creating the user, update their profile with the display name
+      await updateProfile(userCredential.user, {
+        displayName: username,
+      })
+    } else {
+      throw new Error('Could not create user.')
+    }
   }
 
   async function logIn(email: string, password: string) {
@@ -34,6 +43,28 @@ export const useAuthStore = defineStore('auth', () => {
       user.value = currentUser
       authReady.value = true
     })
+  }
+
+  async function updateUsername(newUsername: string) {
+    if (auth.currentUser) {
+      try {
+        await updateProfile(auth.currentUser, {
+          displayName: newUsername,
+        })
+        // Manually update the local user state to reflect the change instantly
+        if (user.value) {
+          user.value = { ...user.value, displayName: newUsername } as User
+        }
+        alert('Username updated successfully!')
+      } catch (error: unknown) {
+        console.error('Error updating username:', error)
+        if (error instanceof Error) {
+          alert(`Error updating username: ${error.message}`)
+        } else {
+          alert('Error updating username.')
+        }
+      }
+    }
   }
 
   async function changePassword(newPassword: string) {
@@ -55,5 +86,14 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, authReady, signUp, logIn, logOut, listenForAuthState, changePassword }
+  return {
+    user,
+    authReady,
+    signUp,
+    logIn,
+    logOut,
+    listenForAuthState,
+    updateUsername,
+    changePassword,
+  }
 })
