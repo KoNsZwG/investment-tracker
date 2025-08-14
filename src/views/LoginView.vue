@@ -3,6 +3,7 @@
 import { ref } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter, RouterLink } from 'vue-router'
+import { ArrowRightEndOnRectangleIcon } from '@heroicons/vue/24/outline'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -39,7 +40,10 @@ const handleLogin = async () => {
           >
           <input v-model="password" type="password" id="password" class="input-field" required />
         </div>
-        <button type="submit" class="btn-primary w-full">Log In</button>
+        <button type="submit" class="btn-primary w-full flex items-center justify-center">
+          <ArrowRightEndOnRectangleIcon class="h-5 w-5 mr-2" />
+          <span>Log In</span>
+        </button>
       </form>
       <p class="text-center text-sm text-brand-secondary mt-4">
         Don't have an account?
