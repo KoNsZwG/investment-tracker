@@ -1,39 +1,70 @@
 // src/views/ProfileView.vue
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, computed } from 'vue' // Import watch and computed
 import { useAuthStore } from '@/stores/authStore'
 
 const authStore = useAuthStore()
+
+// --- STATE for forms ---
+const newUsername = ref(authStore.user?.displayName || '')
 const newPassword = ref('')
 const confirmPassword = ref('')
-const newUsername = ref(authStore.user?.displayName || '')
-async function handleChangePassword() {
-  if (!newPassword.value) {
-    alert('Please enter a new password.')
-    return
-  }
-  if (newPassword.value !== confirmPassword.value) {
-    alert('Passwords do not match.')
-    return
-  }
-  if (newPassword.value.length < 6) {
-    alert('Password must be at least 6 characters long.')
-    return
-  }
 
-  // We'll create the 'changePassword' action in the next step
+// --- STATE for validation ---
+const usernameError = ref('')
+const passwordError = ref('')
+const confirmPasswordError = ref('')
+
+// --- VALIDATION LOGIC ---
+watch(newUsername, (value) => {
+  if (value && value.length < 3) {
+    usernameError.value = 'Username must be at least 3 characters.'
+  } else {
+    usernameError.value = ''
+  }
+})
+
+watch(newPassword, (value) => {
+  if (value && value.length < 6) {
+    passwordError.value = 'Password must be at least 6 characters long.'
+  } else {
+    passwordError.value = ''
+  }
+})
+
+watch([newPassword, confirmPassword], ([newPass, confirmPass]) => {
+  if (confirmPass && newPass !== confirmPass) {
+    confirmPasswordError.value = 'Passwords do not match.'
+  } else {
+    confirmPasswordError.value = ''
+  }
+})
+
+// --- COMPUTED properties for form validity ---
+const isUsernameFormValid = computed(() => {
+  return newUsername.value.length >= 3 && !usernameError.value
+})
+
+const isPasswordFormValid = computed(() => {
+  return (
+    newPassword.value.length >= 6 &&
+    newPassword.value === confirmPassword.value &&
+    !passwordError.value &&
+    !confirmPasswordError.value
+  )
+})
+
+// --- HANDLERS ---
+async function handleUpdateUsername() {
+  if (!isUsernameFormValid.value) return
+  await authStore.updateUsername(newUsername.value)
+}
+
+async function handleChangePassword() {
+  if (!isPasswordFormValid.value) return
   await authStore.changePassword(newPassword.value)
   newPassword.value = ''
   confirmPassword.value = ''
-}
-
-// Handler for the username form
-async function handleUpdateUsername() {
-  if (!newUsername.value) {
-    alert('Please enter a username.')
-    return
-  }
-  await authStore.updateUsername(newUsername.value)
 }
 </script>
 
@@ -42,7 +73,7 @@ async function handleUpdateUsername() {
     <h1 class="text-3xl font-bold text-white">My Profile</h1>
 
     <div class="card mt-8 max-w-lg space-y-8">
-      <!-- Account Info Section -->
+      <!-- Account Info -->
       <div>
         <h2 class="text-xl font-bold text-white">Account Information</h2>
         <p class="text-brand-secondary mt-4">
@@ -57,10 +88,23 @@ async function handleUpdateUsername() {
           <label for="username" class="block text-sm font-medium text-brand-secondary"
             >Username</label
           >
-          <input v-model="newUsername" type="text" id="username" class="input-field mt-1" />
+          <input
+            v-model="newUsername"
+            type="text"
+            id="username"
+            class="input-field mt-1"
+            :class="{ 'border-red-500': usernameError }"
+          />
+          <p v-if="usernameError" class="mt-1 text-sm text-red-400">{{ usernameError }}</p>
         </div>
         <div class="mt-6">
-          <button type="submit" class="btn-primary w-full">Update Username</button>
+          <button
+            type="submit"
+            :disabled="!isUsernameFormValid"
+            class="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Update Username
+          </button>
         </div>
       </form>
 
@@ -77,7 +121,9 @@ async function handleUpdateUsername() {
               type="password"
               id="new-password"
               class="input-field mt-1"
+              :class="{ 'border-red-500': passwordError }"
             />
+            <p v-if="passwordError" class="mt-1 text-sm text-red-400">{{ passwordError }}</p>
           </div>
           <div>
             <label for="confirm-password" class="block text-sm font-medium text-brand-secondary"
@@ -88,12 +134,21 @@ async function handleUpdateUsername() {
               type="password"
               id="confirm-password"
               class="input-field mt-1"
+              :class="{ 'border-red-500': confirmPasswordError }"
             />
+            <p v-if="confirmPasswordError" class="mt-1 text-sm text-red-400">
+              {{ confirmPasswordError }}
+            </p>
           </div>
         </div>
         <div class="mt-6">
-          <!-- APPLIED 'w-full' for consistency -->
-          <button type="submit" class="btn-primary w-full">Update Password</button>
+          <button
+            type="submit"
+            :disabled="!isPasswordFormValid"
+            class="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Update Password
+          </button>
         </div>
       </form>
     </div>

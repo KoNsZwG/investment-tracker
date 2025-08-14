@@ -1,6 +1,6 @@
 // src/views/RegisterView.vue
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue' // Import computed and watch
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter, RouterLink } from 'vue-router'
 import { ArrowRightEndOnRectangleIcon } from '@heroicons/vue/24/outline'
@@ -8,33 +8,78 @@ import { ArrowRightEndOnRectangleIcon } from '@heroicons/vue/24/outline'
 const authStore = useAuthStore()
 const router = useRouter()
 
-const username = ref('') // <-- NEW
+// --- Form State ---
+const username = ref('')
 const email = ref('')
 const password = ref('')
-const confirmPassword = ref('') // <-- NEW
+const confirmPassword = ref('')
+
+// --- Validation State ---
+const usernameError = ref('')
+const emailError = ref('')
+const passwordError = ref('')
+const confirmPasswordError = ref('')
+
+// --- Validation Logic using Watchers ---
+watch(username, (value) => {
+  if (value && value.length < 3) {
+    usernameError.value = 'Username must be at least 3 characters.'
+  } else {
+    usernameError.value = ''
+  }
+})
+
+watch(email, (value) => {
+  // Simple email regex for basic validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (value && !emailRegex.test(value)) {
+    emailError.value = 'Please enter a valid email address.'
+  } else {
+    emailError.value = ''
+  }
+})
+
+watch(password, (value) => {
+  if (value && value.length < 6) {
+    passwordError.value = 'Password must be at least 6 characters long.'
+  } else {
+    passwordError.value = ''
+  }
+})
+
+watch([password, confirmPassword], ([newPassword, newConfirm]) => {
+  if (newConfirm && newPassword !== newConfirm) {
+    confirmPasswordError.value = 'Passwords do not match.'
+  } else {
+    confirmPasswordError.value = ''
+  }
+})
+
+// --- Computed Property to check overall form validity ---
+const isFormValid = computed(() => {
+  return (
+    username.value.length >= 3 &&
+    email.value &&
+    !emailError.value &&
+    password.value.length >= 6 &&
+    confirmPassword.value === password.value &&
+    !usernameError.value &&
+    !passwordError.value &&
+    !confirmPasswordError.value
+  )
+})
 
 const handleRegister = async () => {
-  // --- NEW VALIDATION ---
-  if (!username.value || !email.value || !password.value) {
-    alert('Please fill out all fields.')
+  if (!isFormValid.value) {
+    alert('Please correct the errors before submitting.')
     return
   }
-  if (password.value !== confirmPassword.value) {
-    alert('Passwords do not match.')
-    return
-  }
-  if (password.value.length < 6) {
-    alert('Password must be at least 6 characters long.')
-    return
-  }
-
   try {
-    // We'll update the signUp action in the next step
     await authStore.signUp(username.value, email.value, password.value)
     router.push({ name: 'dashboard' })
   } catch (error: unknown) {
     const errorMsg =
-      error && typeof error === 'object' && 'message' in error
+      typeof error === 'object' && error !== null && 'message' in error
         ? (error as { message: string }).message
         : String(error)
     alert(`Error signing up: ${errorMsg}`)
@@ -46,28 +91,52 @@ const handleRegister = async () => {
   <div v-if="authStore.authReady" class="flex items-center justify-center min-h-screen">
     <div class="w-full max-w-md card">
       <h2 class="text-2xl font-bold text-white mb-6 text-center">Create an Account</h2>
-      <form @submit.prevent="handleRegister">
-        <!-- NEW USERNAME FIELD -->
-        <div class="mb-4">
+      <form @submit.prevent="handleRegister" class="space-y-4">
+        <!-- Username Field with Error Message -->
+        <div>
           <label for="username" class="block text-sm font-medium text-brand-secondary"
             >Username</label
           >
-          <input v-model="username" type="text" id="username" class="input-field" required />
+          <input
+            v-model="username"
+            type="text"
+            id="username"
+            class="input-field"
+            :class="{ 'border-red-500': usernameError }"
+            required
+          />
+          <p v-if="usernameError" class="mt-1 text-sm text-red-400">{{ usernameError }}</p>
         </div>
-        <!-- EMAIL FIELD -->
-        <div class="mb-4">
+        <!-- Email Field with Error Message -->
+        <div>
           <label for="email" class="block text-sm font-medium text-brand-secondary">Email</label>
-          <input v-model="email" type="email" id="email" class="input-field" required />
+          <input
+            v-model="email"
+            type="email"
+            id="email"
+            class="input-field"
+            :class="{ 'border-red-500': emailError }"
+            required
+          />
+          <p v-if="emailError" class="mt-1 text-sm text-red-400">{{ emailError }}</p>
         </div>
-        <!-- PASSWORD FIELD -->
-        <div class="mb-6">
+        <!-- Password Field with Error Message -->
+        <div>
           <label for="password" class="block text-sm font-medium text-brand-secondary"
             >Password</label
           >
-          <input v-model="password" type="password" id="password" class="input-field" required />
+          <input
+            v-model="password"
+            type="password"
+            id="password"
+            class="input-field"
+            :class="{ 'border-red-500': passwordError }"
+            required
+          />
+          <p v-if="passwordError" class="mt-1 text-sm text-red-400">{{ passwordError }}</p>
         </div>
-        <!-- NEW CONFIRM PASSWORD FIELD -->
-        <div class="mb-6">
+        <!-- Confirm Password Field with Error Message -->
+        <div>
           <label for="confirm-password" class="block text-sm font-medium text-brand-secondary"
             >Confirm Password</label
           >
@@ -76,10 +145,19 @@ const handleRegister = async () => {
             type="password"
             id="confirm-password"
             class="input-field"
+            :class="{ 'border-red-500': confirmPasswordError }"
             required
           />
+          <p v-if="confirmPasswordError" class="mt-1 text-sm text-red-400">
+            {{ confirmPasswordError }}
+          </p>
         </div>
-        <button type="submit" class="btn-primary w-full flex items-center justify-center">
+        <!-- Disabled Submit Button -->
+        <button
+          type="submit"
+          :disabled="!isFormValid"
+          class="btn-primary w-full flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <ArrowRightEndOnRectangleIcon class="h-5 w-5 mr-2" />
           <span>Register</span>
         </button>
