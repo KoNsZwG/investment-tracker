@@ -6,7 +6,7 @@ import { RouterLink, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import {
   ChartBarIcon,
-  //  Bars3Icon,
+  Bars3Icon,
   XMarkIcon,
   ArrowLeftEndOnRectangleIcon,
   Cog6ToothIcon,
@@ -168,6 +168,12 @@ const handleLogout = async () => {
         >
         <RouterLink :to="{ name: 'news' }" class="mobile-nav-link" @click="isMobileMenuOpen = false"
           >News</RouterLink
+        >
+        <RouterLink
+          :to="{ name: 'about' }"
+          class="mobile-nav-link"
+          @click="isMobileMenuOpen = false"
+          >About</RouterLink
         >
       </div>
 
