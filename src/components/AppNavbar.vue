@@ -3,13 +3,23 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { ChartBarIcon, BellIcon, Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { useAuthStore } from '@/stores/authStore'
+import { ChartBarIcon, Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { useRouter } from 'vue-router' // Import useRouter to handle navigation
 
+const authStore = useAuthStore()
+const router = useRouter() // Get the router instance
 const isMobileMenuOpen = ref(false)
+
+const handleLogout = async () => {
+  // Create a handler for logout
+  await authStore.logOut()
+  router.push({ name: 'login' })
+}
 </script>
 
 <template>
-  <nav class="bg-brand-dark border-b border-brand-border">
+  <nav v-if="authStore.user" class="bg-brand-dark border-b border-brand-border">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <!-- Logo Section -->
@@ -33,13 +43,11 @@ const isMobileMenuOpen = ref(false)
           </div>
         </div>
 
-        <!-- Desktop Profile/Notifications -->
+        <!-- Desktop Profile/Logout -->
         <div class="hidden md:block">
-          <div class="hidden ml-4 flex items-center md:ml-6 space-x-4">
-            <button type="button" class="p-1 rounded-full text-gray-400 hover:text-white">
-              <BellIcon class="h-6 w-6" aria-hidden="true" />
-            </button>
-            <div class="h-8 w-8 rounded-full bg-brand-secondary"></div>
+          <div class="ml-4 flex items-center md:ml-6 space-x-4">
+            <button @click="handleLogout" class="nav-link">Logout</button>
+            <!-- Bell and Profile placeholders could go here -->
           </div>
         </div>
 
@@ -58,7 +66,7 @@ const isMobileMenuOpen = ref(false)
       </div>
     </div>
 
-    <!-- Mobile Menu Panel -->
+    <!-- Mobile Menu Panel (WITH LOGOUT BUTTON) -->
     <div v-if="isMobileMenuOpen" class="md:hidden">
       <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
         <RouterLink
@@ -89,6 +97,12 @@ const isMobileMenuOpen = ref(false)
           >News</RouterLink
         >
       </div>
+      <!-- This is the new section for mobile logout -->
+      <div class="border-t border-gray-700 pt-4 pb-3">
+        <div class="px-2 space-y-1">
+          <button @click="handleLogout" class="mobile-nav-link w-full text-left">Logout</button>
+        </div>
+      </div>
     </div>
   </nav>
 </template>
@@ -96,9 +110,6 @@ const isMobileMenuOpen = ref(false)
 <style scoped>
 .nav-link {
   @apply text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors;
-}
-.nav-link-disabled {
-  @apply text-gray-500 px-3 py-2 rounded-md text-sm font-medium cursor-not-allowed;
 }
 .mobile-nav-link {
   @apply text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium;
