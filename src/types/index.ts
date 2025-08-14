@@ -23,5 +23,21 @@ export interface Expense {
 export interface ApiQuote {
   symbol: string
   price: number
-  // You could add other properties like 'name', 'dayHigh' if you wanted to use them
+  change?: number
+  changesPercentage?: number
+}
+
+export interface NewsArticle {
+  title: string
+  description: string
+  url: string
+  urlToImage: string | null
+  source: {
+    name: string
+  }
+}
+
+export interface SearchResult {
+  '1. symbol': string
+  '2. name': string
 }

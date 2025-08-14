@@ -2,9 +2,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue' // <-- Import 'watch'
 import type { Investment } from '@/types'
+import { fetchQuote } from '@/services/apiService'
 
-const fmpApiKey = import.meta.env.VITE_FMP_API_KEY
-const alphaVantageApiKey = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY
 const LOCAL_STORAGE_KEY = 'my_investment_portfolio'
 
 function sleep(ms: number) {
@@ -74,80 +73,33 @@ export const useInvestmentStore = defineStore('investment', () => {
   })
 
   async function fetchSinglePrice(investment: Investment) {
-    // --- Caching logic (remains the same) ---
+    // Caching logic remains the same
     const CACHE_DURATION_MS = 15 * 60 * 1000
     const now = Date.now()
     if (investment.lastFetched && now - investment.lastFetched < CACHE_DURATION_MS) {
-      console.log(`Using cached price for ${investment.id}.`)
       return
     }
 
-    // --- Clear old data before fetching ---
     investment.error = undefined
     investment.currentPrice = undefined
     investment.dailyChange = undefined
     investment.dailyChangePercent = undefined
 
     try {
-      let quote // A variable to hold the parsed quote data
+      // All the complex logic is now hidden in the service!
+      const quote = await fetchQuote(investment.id)
 
-      // --- API ROUTING LOGIC ---
-      if (investment.id.includes('.')) {
-        // --- ALPHA VANTAGE LOGIC (for ETFs like VUAA.L) ---
-        console.log(`Fetching ${investment.id} from Alpha Vantage...`)
-        if (!alphaVantageApiKey) throw new Error('Alpha Vantage API key is missing.')
-
-        const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${investment.id}&apikey=${alphaVantageApiKey}`
-        const response = await fetch(url)
-        if (!response.ok) throw new Error('Alpha Vantage API request failed')
-        const data = await response.json()
-
-        if (data.Note) throw new Error('Alpha Vantage API limit reached.')
-
-        const avQuote = data['Global Quote']
-        if (avQuote && avQuote['05. price'] && Object.keys(avQuote).length > 0) {
-          quote = {
-            price: parseFloat(avQuote['05. price']),
-            change: parseFloat(avQuote['09. change']),
-            changesPercentage: parseFloat(avQuote['10. change percent'].replace('%', '')),
-          }
-        } else {
-          throw new Error('Invalid ticker or no data available from Alpha Vantage.')
-        }
-      } else {
-        // --- FMP LOGIC (for stocks like AAPL and crypto like BTCUSD) ---
-        console.log(`Fetching ${investment.id} from FMP...`)
-        if (!fmpApiKey) throw new Error('FMP API key is missing.')
-
-        const url = `https://financialmodelingprep.com/api/v3/quote/${investment.id}?apikey=${fmpApiKey}`
-        const response = await fetch(url)
-        if (!response.ok) throw new Error('FMP API request failed')
-        const data = await response.json()
-
-        const fmpQuote = data[0]
-        if (fmpQuote && fmpQuote.price) {
-          quote = {
-            price: fmpQuote.price,
-            change: fmpQuote.change,
-            changesPercentage: fmpQuote.changesPercentage,
-          }
-        } else {
-          throw new Error('Invalid ticker or no data available from FMP.')
-        }
-      }
-
-      // --- UNIFIED DATA ASSIGNMENT ---
-      // After getting the quote from either API, assign it to our investment.
-      if (quote) {
-        investment.currentPrice = quote.price
-        investment.dailyChange = quote.change
-        investment.dailyChangePercent = quote.changesPercentage
-        investment.lastFetched = Date.now()
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+      investment.currentPrice = quote.price
+      investment.dailyChange = quote.change
+      investment.dailyChangePercent = quote.changesPercentage
+      investment.lastFetched = Date.now()
+    } catch (error: unknown) {
       console.error(`Failed to fetch price for ${investment.id}:`, error)
-      investment.error = error.message
+      if (error instanceof Error) {
+        investment.error = error.message
+      } else {
+        investment.error = String(error)
+      }
     }
   }
 

@@ -2,12 +2,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useInvestmentStore } from '@/stores/investmentStore'
+import { searchSymbols } from '@/services/apiService' // Import the API service for searching symbols
 
-// Define the shape of the API search result
-interface SearchResult {
-  '1. symbol': string
-  '2. name': string
-}
+import type { SearchResult } from '@/types' // Import the SearchResult type
 
 const investmentStore = useInvestmentStore()
 
@@ -40,17 +37,13 @@ watch(ticker, (newTicker) => {
   // Set a new timer
   debounceTimer = setTimeout(async () => {
     try {
-      const response = await fetch(`/api/search?keyword=${newTicker}`)
-      const data = await response.json()
-      if (data.bestMatches) {
-        searchResults.value = data.bestMatches
-      }
+      searchResults.value = await searchSymbols(newTicker) // <-- Use the service
     } catch (error) {
       console.error('Failed to fetch search results:', error)
     } finally {
       isSearchLoading.value = false
     }
-  }, 300) // 300ms delay
+  }, 300)
 })
 
 // --- EVENT HANDLERS ---
