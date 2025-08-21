@@ -40,7 +40,7 @@ function cancelEditing() {
 
 function saveChanges() {
   if (editedShares.value > 0 && editedPurchasePrice.value > 0) {
-    investmentStore.updateInvestment(props.investment.id, {
+    investmentStore.updateInvestment(props.investment.firestoreId!, {
       shares: editedShares.value,
       purchasePrice: editedPurchasePrice.value,
     })
@@ -123,7 +123,7 @@ const totalGainLossPercent = computed(() => {
             >
             <a
               href="#"
-              @click.prevent="investmentStore.deleteInvestment(investment.id)"
+              @click.prevent="investmentStore.deleteInvestment(investment.firestoreId!)"
               class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-600"
               >Delete</a
             >

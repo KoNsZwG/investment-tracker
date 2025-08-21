@@ -1,11 +1,13 @@
 // src/types/index.ts
 export interface Investment {
   id: string // We'll use the ticker symbol as the ID
+  firestoreId?: string
   name: string
   shares: number
   purchasePrice: number
   currentPrice?: number
   dateAdded: string
+  userId: string
   dailyChange?: number
   dailyChangePercent?: number
   error?: string
@@ -14,6 +16,8 @@ export interface Investment {
 
 export interface Expense {
   id: string // A unique ID for each expense
+  firestoreId?: string // <-- ADD THIS
+  userId: string // <-- ADD THIS
   title: string
   amount: number
   category: string
@@ -39,6 +43,8 @@ export interface NewsArticle {
 
 export interface Income {
   id: string
+  firestoreId?: string // <-- ADD THIS
+  userId: string // <-- ADD THIS
   title: string
   amount: number
   category: 'Salary' | 'Bonus' | 'Investment' | 'Other' // A more defined category set

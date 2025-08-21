@@ -1,31 +1,19 @@
 // src/stores/expenseStore.ts
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import type { Expense } from '@/types'
-import { v4 as uuidv4 } from 'uuid' // We'll use a library to generate unique IDs
-
-const EXPENSE_STORAGE_KEY = 'my_expense_list'
+import { db, auth } from '@/firebase'
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore'
+import { v4 as uuidv4 } from 'uuid' // Still useful for the old 'id' field if needed
 
 export const useExpenseStore = defineStore('expense', () => {
   // --- STATE ---
-  const initialData = localStorage.getItem(EXPENSE_STORAGE_KEY)
-  const expenses = ref<Expense[]>(initialData ? JSON.parse(initialData) : [])
-
-  // --- WATCHER ---
-  // Automatically save to local storage whenever the expenses array changes
-  watch(
-    expenses,
-    (newExpenses) => {
-      localStorage.setItem(EXPENSE_STORAGE_KEY, JSON.stringify(newExpenses))
-    },
-    { deep: true },
-  )
+  const expenses = ref<Expense[]>([])
 
   // --- GETTERS ---
   const totalExpensesThisMonth = computed(() => {
     const currentMonth = new Date().getMonth()
     const currentYear = new Date().getFullYear()
-
     return expenses.value
       .filter((expense) => {
         const expenseDate = new Date(expense.date)
@@ -33,33 +21,83 @@ export const useExpenseStore = defineStore('expense', () => {
       })
       .reduce((total, expense) => total + expense.amount, 0)
   })
+
   const expensesByMonth = computed(() => {
     const monthlyData: Record<string, number> = {}
     expenses.value.forEach((exp) => {
-      const month = exp.date.slice(0, 7) // 'YYYY-MM'
+      const month = exp.date.slice(0, 7)
       monthlyData[month] = (monthlyData[month] || 0) + exp.amount
     })
     return monthlyData
   })
 
   // --- ACTIONS ---
-  function addExpense(newExpenseData: Omit<Expense, 'id'>) {
-    const newExpense: Expense = {
-      ...newExpenseData,
-      id: uuidv4(), // Generate a unique ID
+
+  // Fetches from Firestore
+  async function fetchExpenses() {
+    const user = auth.currentUser
+    if (!user) return
+
+    expenses.value = []
+    const expensesCollectionRef = collection(db, 'expenses')
+    const q = query(expensesCollectionRef, where('userId', '==', user.uid))
+
+    try {
+      const querySnapshot = await getDocs(q)
+      const fetchedExpenses: Expense[] = []
+      querySnapshot.forEach((doc) => {
+        fetchedExpenses.push({
+          ...(doc.data() as Omit<Expense, 'firestoreId'>),
+          firestoreId: doc.id,
+        })
+      })
+      expenses.value = fetchedExpenses
+    } catch (error) {
+      console.error('Error fetching expenses:', error)
     }
-    expenses.value.unshift(newExpense) // unshift() adds to the beginning of the array
   }
 
-  function deleteExpense(expenseId: string) {
-    expenses.value = expenses.value.filter((exp) => exp.id !== expenseId)
+  // Adds to Firestore
+  async function addExpense(newExpenseData: Omit<Expense, 'id' | 'userId' | 'firestoreId'>) {
+    const user = auth.currentUser
+    if (!user) return
+
+    const expenseToAdd = {
+      ...newExpenseData,
+      id: uuidv4(),
+      userId: user.uid,
+    }
+
+    try {
+      const docRef = await addDoc(collection(db, 'expenses'), expenseToAdd)
+      expenses.value.unshift({ ...expenseToAdd, firestoreId: docRef.id })
+    } catch (error) {
+      console.error('Error adding expense:', error)
+    }
+  }
+
+  // Deletes from Firestore
+  async function deleteExpense(firestoreId: string) {
+    try {
+      await deleteDoc(doc(db, 'expenses', firestoreId))
+      expenses.value = expenses.value.filter((exp) => exp.firestoreId !== firestoreId)
+    } catch (error) {
+      console.error('Error deleting expense:', error)
+    }
+  }
+
+  // Clears local state on logout
+  function clearStore() {
+    expenses.value = []
   }
 
   return {
     expenses,
     totalExpensesThisMonth,
     expensesByMonth,
+    fetchExpenses,
     addExpense,
     deleteExpense,
+    clearStore,
   }
 })

@@ -54,19 +54,13 @@ function handleResultClick(result: SearchResult) {
 }
 
 function handleSubmit() {
-  if (
-    !ticker.value ||
-    !name.value ||
-    !shares.value ||
-    !purchasePrice.value ||
-    shares.value <= 0 ||
-    purchasePrice.value <= 0
-  ) {
+  if (!ticker.value || !name.value || !shares.value || !purchasePrice.value) {
     alert('Please fill out all fields with valid numbers.')
     return
   }
+  // This object now matches what the store's addInvestment function expects
   const newInvestmentData = {
-    id: ticker.value, // The ID will be uppercased in the store action
+    id: ticker.value,
     name: name.value,
     shares: shares.value,
     purchasePrice: purchasePrice.value,

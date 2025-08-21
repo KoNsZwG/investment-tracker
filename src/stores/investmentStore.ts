@@ -1,70 +1,55 @@
 // src/stores/investmentStore.ts
+
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue' // <-- Import 'watch'
+import { ref, computed } from 'vue'
 import type { Investment } from '@/types'
+import { db, auth } from '@/firebase' // Import Firestore and Auth
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  writeBatch,
+  addDoc,
+  deleteDoc,
+  doc,
+  updateDoc,
+} from 'firebase/firestore'
 import { fetchQuote } from '@/services/apiService'
 
-const LOCAL_STORAGE_KEY = 'my_investment_portfolio'
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}
+const CACHE_DURATION_MS = 15 * 60 * 1000 // 15 minutes
 
 export const useInvestmentStore = defineStore('investment', () => {
   // --- STATE ---
-  // Try to load initial state from Local Storage, or use sample data as a fallback.
-  const initialData = localStorage.getItem(LOCAL_STORAGE_KEY)
-  const investments = ref<Investment[]>(
-    initialData
-      ? JSON.parse(initialData)
-      : [
-          { id: 'AAPL', name: 'Apple Inc.', shares: 10, purchasePrice: 150 },
-          { id: 'GOOGL', name: 'Alphabet Inc.', shares: 5, purchasePrice: 120 },
-          { id: 'VOO', name: 'Vanguard S&P 500 ETF', shares: 20, purchasePrice: 380 },
-        ],
-  )
+  const investments = ref<Investment[]>([])
   const isLoading = ref(false)
 
-  // --- WATCHER ---
-  // This is a powerful feature. It watches the 'investments' state and runs a function
-  // whenever it changes.
-  watch(
-    investments,
-    (newInvestments) => {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newInvestments))
-    },
-    { deep: true }, // 'deep: true' is crucial to watch for changes inside the array
-  )
-
   // --- GETTERS ---
-  // ... (portfolioTotalCost and portfolioCurrentValue are the same)
   const portfolioTotalCost = computed(() =>
     investments.value.reduce((total, inv) => total + inv.shares * inv.purchasePrice, 0),
   )
+
   const portfolioCurrentValue = computed(() =>
     investments.value.reduce((total, inv) => {
       const price = inv.currentPrice ?? inv.purchasePrice
       return total + inv.shares * price
     }, 0),
   )
+
   const portfolioTodayGainLoss = computed(() =>
     investments.value.reduce((total, inv) => {
-      // Only add if dailyChange is a valid number
       if (inv.dailyChange) {
         return total + inv.shares * inv.dailyChange
       }
       return total
     }, 0),
   )
-  // NEW GETTER: Investments grouped by month
 
   const investmentsByMonth = computed(() => {
     const monthlyData: Record<string, number> = {}
     investments.value.forEach((inv) => {
-      // THIS IS THE FIX:
-      // Only process investments that have a dateAdded property.
       if (inv.dateAdded) {
-        const month = inv.dateAdded.slice(0, 7) // 'YYYY-MM'
+        const month = inv.dateAdded.slice(0, 7)
         const cost = inv.shares * inv.purchasePrice
         monthlyData[month] = (monthlyData[month] || 0) + cost
       }
@@ -72,9 +57,128 @@ export const useInvestmentStore = defineStore('investment', () => {
     return monthlyData
   })
 
+  // --- ACTIONS ---
+
+  // Fetches from Firestore for the currently logged-in user
+  async function fetchInvestments() {
+    const user = auth.currentUser
+    if (!user) return
+
+    investments.value = []
+    isLoading.value = true
+
+    const investmentsCollectionRef = collection(db, 'investments')
+    const q = query(investmentsCollectionRef, where('userId', '==', user.uid))
+
+    try {
+      const querySnapshot = await getDocs(q)
+      const fetchedInvestments: Investment[] = []
+      querySnapshot.forEach((doc) => {
+        fetchedInvestments.push({
+          ...(doc.data() as Omit<Investment, 'firestoreId'>),
+          firestoreId: doc.id,
+        })
+      })
+      investments.value = fetchedInvestments
+      await fetchAllLivePrices()
+    } catch (error) {
+      console.error('Error fetching investments from Firestore:', error)
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  // Adds a new investment to Firestore
+  async function addInvestment(newInvestmentData: {
+    id: string
+    name: string
+    shares: number
+    purchasePrice: number
+  }) {
+    const user = auth.currentUser
+    if (!user) return
+
+    const investmentToAdd = {
+      ...newInvestmentData,
+      id: newInvestmentData.id.toUpperCase(), // This is now safe
+      dateAdded: new Date().toISOString().slice(0, 10),
+      userId: user.uid,
+    }
+
+    try {
+      const docRef = await addDoc(collection(db, 'investments'), investmentToAdd)
+      const newInvestment = { ...investmentToAdd, firestoreId: docRef.id }
+      investments.value.unshift(newInvestment)
+      await fetchSinglePrice(newInvestment)
+    } catch (error) {
+      console.error('Error adding investment:', error)
+    }
+  }
+
+  // Deletes an investment from Firestore
+  async function deleteInvestment(firestoreId: string) {
+    try {
+      await deleteDoc(doc(db, 'investments', firestoreId))
+      investments.value = investments.value.filter((inv) => inv.firestoreId !== firestoreId)
+    } catch (error) {
+      console.error('Error deleting investment from Firestore:', error)
+    }
+  }
+
+  // Updates an investment in Firestore
+  async function updateInvestment(
+    firestoreId: string,
+    updatedData: { shares: number; purchasePrice: number },
+  ) {
+    const investmentDocRef = doc(db, 'investments', firestoreId)
+    try {
+      await updateDoc(investmentDocRef, updatedData)
+      const investmentInState = investments.value.find((inv) => inv.firestoreId === firestoreId)
+      if (investmentInState) {
+        investmentInState.shares = updatedData.shares
+        investmentInState.purchasePrice = updatedData.purchasePrice
+      }
+    } catch (error) {
+      console.error('Error updating investment in Firestore:', error)
+    }
+  }
+
+  async function clearPortfolio() {
+    const user = auth.currentUser
+    if (!user) return
+
+    const investmentsCollectionRef = collection(db, 'investments')
+    const q = query(investmentsCollectionRef, where('userId', '==', user.uid))
+
+    try {
+      const querySnapshot = await getDocs(q)
+      if (querySnapshot.empty) {
+        alert('Portfolio is already empty.')
+        return
+      }
+
+      const batch = writeBatch(db)
+      querySnapshot.forEach((doc) => {
+        batch.delete(doc.ref)
+      })
+      await batch.commit()
+
+      investments.value = [] // Clear local state
+      alert('Portfolio cleared successfully.')
+    } catch (error) {
+      console.error('Error clearing portfolio:', error)
+      alert('Failed to clear portfolio.')
+    }
+  }
+
+  // Clears the local state when a user logs out
+  function clearStore() {
+    investments.value = []
+  }
+
+  // --- API Fetching Actions (Internal) ---
+
   async function fetchSinglePrice(investment: Investment) {
-    // Caching logic remains the same
-    const CACHE_DURATION_MS = 15 * 60 * 1000
     const now = Date.now()
     if (investment.lastFetched && now - investment.lastFetched < CACHE_DURATION_MS) {
       return
@@ -86,125 +190,23 @@ export const useInvestmentStore = defineStore('investment', () => {
     investment.dailyChangePercent = undefined
 
     try {
-      // All the complex logic is now hidden in the service!
       const quote = await fetchQuote(investment.id)
-
       investment.currentPrice = quote.price
       investment.dailyChange = quote.change
       investment.dailyChangePercent = quote.changesPercentage
       investment.lastFetched = Date.now()
-    } catch (error: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
       console.error(`Failed to fetch price for ${investment.id}:`, error)
-      if (error instanceof Error) {
-        investment.error = error.message
-      } else {
-        investment.error = String(error)
-      }
-    }
-  }
-
-  function addInvestment(newInvestmentData: Omit<Investment, 'dateAdded'>) {
-    // Check if an investment with the same ID already exists
-    const existing = investments.value.find(
-      (inv) => inv.id.toUpperCase() === newInvestmentData.id.toUpperCase(),
-    )
-    if (existing) {
-      alert('Investment already exists!')
-      return
-    }
-
-    // Create the final Investment object, adding the date
-    const newInvestment: Investment = {
-      ...newInvestmentData,
-      id: newInvestmentData.id.toUpperCase(), // Standardize to uppercase
-      dateAdded: new Date().toISOString().slice(0, 10),
-    }
-
-    investments.value.unshift(newInvestment) // Add to the beginning of the list
-    fetchSinglePrice(newInvestment)
-  }
-
-  // NEW ACTION: Delete an investment by its ID
-  function deleteInvestment(investmentId: string) {
-    investments.value = investments.value.filter((inv) => inv.id !== investmentId)
-  }
-
-  // NEW ACTION: Find an investment by its ID and update its data
-  function updateInvestment(
-    investmentId: string,
-    updatedData: { shares: number; purchasePrice: number },
-  ) {
-    const investment = investments.value.find((inv) => inv.id === investmentId)
-    if (investment) {
-      investment.shares = updatedData.shares
-      investment.purchasePrice = updatedData.purchasePrice
-      // We don't re-fetch here to save API calls, user can click Refresh
+      investment.error = error.message
     }
   }
 
   async function fetchAllLivePrices() {
-    // if (!alphaVantageApiKey) {
-    //   console.error('Alpha Vantage API key is missing!')
-    //   return
-    // }
-    // if (investments.value.length === 0) return
-
     isLoading.value = true
-
-    for (const investment of investments.value) {
-      await fetchSinglePrice(investment)
-      await sleep(1000) // Wait for 1 second before the next API call
-    }
-    // try {
-    //   const pricePromises = investments.value.map(async (investment) => {
-    //     // Clear any previous errors before fetching
-    //     investment.error = undefined
-    //     investment.currentPrice = undefined // Clear old price to show loading state
-
-    //     const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${investment.id}&apikey=${alphaVantageApiKey}`
-    //     const response = await fetch(url)
-    //     if (!response.ok) {
-    //       throw new Error(`API request failed with status ${response.status}`)
-    //     }
-    //     const data = await response.json()
-
-    //     const quote = data['Global Quote']
-
-    //     // Alpha Vantage sends a "Note" when you hit the API limit
-    //     if (data.Note) {
-    //       throw new Error('API limit reached. Try again later.')
-    //     }
-
-    //     if (quote && quote['05. price'] && Object.keys(quote).length > 0) {
-    //       investment.currentPrice = parseFloat(quote['05. price'])
-    //     } else {
-    //       // This means the ticker is likely invalid
-    //       throw new Error('Invalid ticker or no data available.')
-    //     }
-    //   })
-
-    //   // Promise.allSettled is better here than Promise.all
-    //   // It will wait for ALL promises to finish, even if some fail.
-    //   const results = await Promise.allSettled(pricePromises)
-
-    //   // Log any individual errors that were caught
-    //   results.forEach((result, index) => {
-    //     if (result.status === 'rejected') {
-    //       const investmentId = investments.value[index].id
-    //       console.error(`Failed to fetch price for ${investmentId}:`, result.reason)
-    //       // Store the error message on the specific investment
-    //       investments.value[index].error = result.reason.message
-    //     }
-    //   })
-    // } catch (error) {
-    //   // This catches network errors or other unexpected issues
-    //   console.error('A general error occurred during fetch:', error)
-    // } finally {
+    const pricePromises = investments.value.map((inv) => fetchSinglePrice(inv))
+    await Promise.all(pricePromises)
     isLoading.value = false
-  }
-
-  function clearPortfolio() {
-    investments.value = []
   }
 
   return {
@@ -214,11 +216,13 @@ export const useInvestmentStore = defineStore('investment', () => {
     portfolioCurrentValue,
     portfolioTodayGainLoss,
     investmentsByMonth,
+    fetchInvestments,
     addInvestment,
     deleteInvestment,
     updateInvestment,
-    fetchSinglePrice,
-    fetchAllLivePrices,
     clearPortfolio,
+    clearStore,
+    fetchAllLivePrices,
+    fetchSinglePrice,
   }
 })

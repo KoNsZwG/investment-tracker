@@ -1,5 +1,8 @@
 // src/stores/authStore.ts
 import { defineStore } from 'pinia'
+import { useInvestmentStore } from './investmentStore' // Import the other stores
+// import { useExpenseStore } from './expenseStore'
+// import { useIncomeStore } from './incomeStore'
 import { ref } from 'vue'
 import { auth } from '@/firebase'
 import {
@@ -39,7 +42,20 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function listenForAuthState() {
-    onAuthStateChanged(auth, (currentUser: User | null) => {
+    onAuthStateChanged(auth, async (currentUser: User | null) => {
+      const investmentStore = useInvestmentStore()
+      // const expenseStore = useExpenseStore();
+      // const incomeStore = useIncomeStore();
+
+      if (currentUser) {
+        await investmentStore.fetchInvestments()
+        // await expenseStore.fetchExpenses();
+        // await incomeStore.fetchIncome();
+      } else {
+        investmentStore.clearStore()
+        // expenseStore.clearStore();
+        // incomeStore.clearStore();
+      }
       user.value = currentUser
       authReady.value = true
     })

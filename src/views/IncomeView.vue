@@ -31,7 +31,7 @@ const incomeStore = useIncomeStore()
           <div class="text-right">
             <p class="font-bold text-lg text-brand-primary">+${{ income.amount.toFixed(2) }}</p>
             <button
-              @click="incomeStore.deleteIncome(income.id)"
+              @click="incomeStore.deleteIncome(income.firestoreId!)"
               class="text-xs text-gray-500 hover:text-white"
             >
               Delete
