@@ -47,9 +47,18 @@ export async function fetchQuote(ticker: string): Promise<ApiQuote> {
   } else {
     // FMP Logic
     if (!fmpApiKey) throw new Error('FMP API key is missing.')
+
+    // DEBUG: Check key format
+    console.log('Using FMP Key:', fmpApiKey.substring(0, 5) + '...', 'Length:', fmpApiKey.length);
+
     const url = `https://financialmodelingprep.com/api/v3/quote/${ticker}?apikey=${fmpApiKey}`
+    console.log('Fetching FMP URL:', url.replace(fmpApiKey, 'HIDDEN_KEY'));
+
     const response = await fetch(url)
-    if (!response.ok) throw new Error('FMP API request failed')
+    if (!response.ok) {
+        console.error('FMP Response Status:', response.status);
+        throw new Error('FMP API request failed')
+    }
     const data = await response.json()
     const fmpQuote = data[0]
     if (fmpQuote && fmpQuote.price) {
