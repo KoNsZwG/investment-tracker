@@ -1,13 +1,12 @@
-// src/types/index.ts
 export interface Investment {
-  id: string // We'll use the ticker symbol as the ID
-  firestoreId?: string
+  id: string
+  userId: string
+  symbol: string
   name: string
   shares: number
   purchasePrice: number
   currentPrice?: number
   dateAdded: string
-  userId: string
   dailyChange?: number
   dailyChangePercent?: number
   error?: string
@@ -15,13 +14,21 @@ export interface Investment {
 }
 
 export interface Expense {
-  id: string // A unique ID for each expense
-  firestoreId?: string // <-- ADD THIS
-  userId: string // <-- ADD THIS
+  id: string
+  userId: string
   title: string
   amount: number
   category: string
-  date: string // We'll store the date as a string in 'YYYY-MM-DD' format
+  date: string
+}
+
+export interface Income {
+  id: string
+  userId: string
+  title: string
+  amount: number
+  category: 'Salary' | 'Bonus' | 'Investment' | 'Other'
+  date: string
 }
 
 export interface ApiQuote {
@@ -41,17 +48,7 @@ export interface NewsArticle {
   }
 }
 
-export interface Income {
-  id: string
-  firestoreId?: string // <-- ADD THIS
-  userId: string // <-- ADD THIS
-  title: string
-  amount: number
-  category: 'Salary' | 'Bonus' | 'Investment' | 'Other' // A more defined category set
-  date: string // 'YYYY-MM-DD'
-}
-
 export interface SearchResult {
-  '1. symbol': string
-  '2. name': string
+  symbol: string
+  name: string
 }
