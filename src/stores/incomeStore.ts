@@ -1,16 +1,24 @@
-// src/stores/incomeStore.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Income } from '@/types'
-import { db, auth } from '@/firebase'
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore'
-import { v4 as uuidv4 } from 'uuid'
+import { supabase } from '@/lib/supabase'
+
+type DbRow = Record<string, unknown>
+
+function rowToIncome(row: DbRow): Income {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    title: row.title as string,
+    amount: row.amount as number,
+    category: row.category as Income['category'],
+    date: row.date as string,
+  }
+}
 
 export const useIncomeStore = defineStore('income', () => {
-  // --- STATE ---
   const incomeSources = ref<Income[]>([])
 
-  // --- GETTERS ---
   const incomeByMonth = computed(() => {
     const monthlyData: Record<string, number> = {}
     incomeSources.value.forEach((inc) => {
@@ -20,62 +28,61 @@ export const useIncomeStore = defineStore('income', () => {
     return monthlyData
   })
 
-  // --- ACTIONS ---
-
-  // Fetches from Firestore
   async function fetchIncome() {
-    const user = auth.currentUser
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return
 
     incomeSources.value = []
-    const incomeCollectionRef = collection(db, 'income')
-    const q = query(incomeCollectionRef, where('userId', '==', user.uid))
 
-    try {
-      const querySnapshot = await getDocs(q)
-      const fetchedIncome: Income[] = []
-      querySnapshot.forEach((doc) => {
-        fetchedIncome.push({
-          ...(doc.data() as Omit<Income, 'firestoreId'>),
-          firestoreId: doc.id,
-        })
-      })
-      incomeSources.value = fetchedIncome
-    } catch (error) {
+    const { data, error } = await supabase
+      .from('income')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+
+    if (error) {
       console.error('Error fetching income:', error)
+    } else {
+      incomeSources.value = (data ?? []).map(rowToIncome)
     }
   }
 
-  // Adds to Firestore
-  async function addIncome(newIncomeData: Omit<Income, 'id' | 'userId' | 'firestoreId'>) {
-    const user = auth.currentUser
+  async function addIncome(newData: Omit<Income, 'id' | 'userId'>) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return
 
-    const incomeToAdd = {
-      ...newIncomeData,
-      id: uuidv4(),
-      userId: user.uid,
-    }
+    const { data, error } = await supabase
+      .from('income')
+      .insert({
+        user_id: user.id,
+        title: newData.title,
+        amount: newData.amount,
+        category: newData.category,
+        date: newData.date,
+      })
+      .select()
+      .single()
 
-    try {
-      const docRef = await addDoc(collection(db, 'income'), incomeToAdd)
-      incomeSources.value.unshift({ ...incomeToAdd, firestoreId: docRef.id })
-    } catch (error) {
+    if (error) {
       console.error('Error adding income:', error)
+      return
     }
+    incomeSources.value.unshift(rowToIncome(data as DbRow))
   }
 
-  // Deletes from Firestore
-  async function deleteIncome(firestoreId: string) {
-    try {
-      await deleteDoc(doc(db, 'income', firestoreId))
-      incomeSources.value = incomeSources.value.filter((inc) => inc.firestoreId !== firestoreId)
-    } catch (error) {
+  async function deleteIncome(id: string) {
+    const { error } = await supabase.from('income').delete().eq('id', id)
+    if (error) {
       console.error('Error deleting income:', error)
+      return
     }
+    incomeSources.value = incomeSources.value.filter((inc) => inc.id !== id)
   }
 
-  // Clears local state on logout
   function clearStore() {
     incomeSources.value = []
   }

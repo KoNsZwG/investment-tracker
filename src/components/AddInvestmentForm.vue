@@ -48,9 +48,9 @@ watch(ticker, (newTicker) => {
 
 // --- EVENT HANDLERS ---
 function handleResultClick(result: SearchResult) {
-  ticker.value = result['1. symbol']
-  name.value = result['2. name']
-  isDropdownVisible.value = false // Hide dropdown after selection
+  ticker.value = result.symbol
+  name.value = result.name
+  isDropdownVisible.value = false
 }
 
 function handleSubmit() {
@@ -60,7 +60,7 @@ function handleSubmit() {
   }
   // This object now matches what the store's addInvestment function expects
   const newInvestmentData = {
-    id: ticker.value,
+    symbol: ticker.value,
     name: name.value,
     shares: shares.value,
     purchasePrice: purchasePrice.value,
@@ -102,12 +102,12 @@ function handleSubmit() {
           <ul v-else-if="searchResults.length > 0">
             <li
               v-for="result in searchResults"
-              :key="result['1. symbol']"
+              :key="result.symbol"
               @click="handleResultClick(result)"
               class="px-4 py-2 text-sm text-white hover:bg-gray-700 cursor-pointer"
             >
-              <span class="font-bold">{{ result['1. symbol'] }}</span> -
-              <span>{{ result['2. name'] }}</span>
+              <span class="font-bold">{{ result.symbol }}</span> -
+              <span>{{ result.name }}</span>
             </li>
           </ul>
           <div v-else class="px-4 py-2 text-sm text-gray-400">No results found.</div>

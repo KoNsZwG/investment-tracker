@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/authStore'
 const authStore = useAuthStore()
 
 // --- STATE for forms ---
-const newUsername = ref(authStore.user?.displayName || '')
+const newUsername = ref(authStore.displayName)
 const newPassword = ref('')
 const confirmPassword = ref('')
 
@@ -57,14 +57,24 @@ const isPasswordFormValid = computed(() => {
 // --- HANDLERS ---
 async function handleUpdateUsername() {
   if (!isUsernameFormValid.value) return
-  await authStore.updateUsername(newUsername.value)
+  try {
+    await authStore.updateUsername(newUsername.value)
+    alert('Username updated successfully!')
+  } catch (error: unknown) {
+    alert(`Error updating username: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 
 async function handleChangePassword() {
   if (!isPasswordFormValid.value) return
-  await authStore.changePassword(newPassword.value)
-  newPassword.value = ''
-  confirmPassword.value = ''
+  try {
+    await authStore.changePassword(newPassword.value)
+    alert('Password updated successfully!')
+    newPassword.value = ''
+    confirmPassword.value = ''
+  } catch (error: unknown) {
+    alert(`Error updating password: ${error instanceof Error ? error.message : String(error)}`)
+  }
 }
 </script>
 
@@ -78,6 +88,9 @@ async function handleChangePassword() {
         <h2 class="text-xl font-bold text-white">Account Information</h2>
         <p class="text-brand-secondary mt-4">
           Email: <span class="font-medium text-white">{{ authStore.user?.email }}</span>
+        </p>
+        <p class="text-brand-secondary mt-2">
+          Username: <span class="font-medium text-white">{{ authStore.displayName }}</span>
         </p>
       </div>
 

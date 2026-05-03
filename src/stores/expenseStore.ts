@@ -1,16 +1,24 @@
-// src/stores/expenseStore.ts
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Expense } from '@/types'
-import { db, auth } from '@/firebase'
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore'
-import { v4 as uuidv4 } from 'uuid' // Still useful for the old 'id' field if needed
+import { supabase } from '@/lib/supabase'
+
+type DbRow = Record<string, unknown>
+
+function rowToExpense(row: DbRow): Expense {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    title: row.title as string,
+    amount: row.amount as number,
+    category: row.category as string,
+    date: row.date as string,
+  }
+}
 
 export const useExpenseStore = defineStore('expense', () => {
-  // --- STATE ---
   const expenses = ref<Expense[]>([])
 
-  // --- GETTERS ---
   const totalExpensesThisMonth = computed(() => {
     const currentMonth = new Date().getMonth()
     const currentYear = new Date().getFullYear()
@@ -31,62 +39,61 @@ export const useExpenseStore = defineStore('expense', () => {
     return monthlyData
   })
 
-  // --- ACTIONS ---
-
-  // Fetches from Firestore
   async function fetchExpenses() {
-    const user = auth.currentUser
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return
 
     expenses.value = []
-    const expensesCollectionRef = collection(db, 'expenses')
-    const q = query(expensesCollectionRef, where('userId', '==', user.uid))
 
-    try {
-      const querySnapshot = await getDocs(q)
-      const fetchedExpenses: Expense[] = []
-      querySnapshot.forEach((doc) => {
-        fetchedExpenses.push({
-          ...(doc.data() as Omit<Expense, 'firestoreId'>),
-          firestoreId: doc.id,
-        })
-      })
-      expenses.value = fetchedExpenses
-    } catch (error) {
+    const { data, error } = await supabase
+      .from('expenses')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+
+    if (error) {
       console.error('Error fetching expenses:', error)
+    } else {
+      expenses.value = (data ?? []).map(rowToExpense)
     }
   }
 
-  // Adds to Firestore
-  async function addExpense(newExpenseData: Omit<Expense, 'id' | 'userId' | 'firestoreId'>) {
-    const user = auth.currentUser
+  async function addExpense(newData: Omit<Expense, 'id' | 'userId'>) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) return
 
-    const expenseToAdd = {
-      ...newExpenseData,
-      id: uuidv4(),
-      userId: user.uid,
-    }
+    const { data, error } = await supabase
+      .from('expenses')
+      .insert({
+        user_id: user.id,
+        title: newData.title,
+        amount: newData.amount,
+        category: newData.category,
+        date: newData.date,
+      })
+      .select()
+      .single()
 
-    try {
-      const docRef = await addDoc(collection(db, 'expenses'), expenseToAdd)
-      expenses.value.unshift({ ...expenseToAdd, firestoreId: docRef.id })
-    } catch (error) {
+    if (error) {
       console.error('Error adding expense:', error)
+      return
     }
+    expenses.value.unshift(rowToExpense(data as DbRow))
   }
 
-  // Deletes from Firestore
-  async function deleteExpense(firestoreId: string) {
-    try {
-      await deleteDoc(doc(db, 'expenses', firestoreId))
-      expenses.value = expenses.value.filter((exp) => exp.firestoreId !== firestoreId)
-    } catch (error) {
+  async function deleteExpense(id: string) {
+    const { error } = await supabase.from('expenses').delete().eq('id', id)
+    if (error) {
       console.error('Error deleting expense:', error)
+      return
     }
+    expenses.value = expenses.value.filter((exp) => exp.id !== id)
   }
 
-  // Clears local state on logout
   function clearStore() {
     expenses.value = []
   }

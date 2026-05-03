@@ -40,7 +40,7 @@ function cancelEditing() {
 
 function saveChanges() {
   if (editedShares.value > 0 && editedPurchasePrice.value > 0) {
-    investmentStore.updateInvestment(props.investment.firestoreId!, {
+    investmentStore.updateInvestment(props.investment.id, {
       shares: editedShares.value,
       purchasePrice: editedPurchasePrice.value,
     })
@@ -70,7 +70,7 @@ const totalGainLossPercent = computed(() => {
     <!-- EDITING VIEW -->
     <div v-if="isEditing">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold">{{ investment.id }}</h3>
+        <h3 class="text-xl font-bold">{{ investment.symbol }}</h3>
         <div class="flex space-x-2">
           <button @click="saveChanges" title="Save" class="text-green-400 hover:text-white">
             <CheckIcon class="h-6 w-6" />
@@ -105,7 +105,7 @@ const totalGainLossPercent = computed(() => {
     <!-- DISPLAY VIEW -->
     <div v-else>
       <div class="flex justify-between items-center mb-2">
-        <h3 class="text-xl font-bold">{{ investment.id }}</h3>
+        <h3 class="text-xl font-bold">{{ investment.symbol }}</h3>
         <div class="relative">
           <button @click="isMenuOpen = !isMenuOpen" class="text-gray-400 hover:text-white">
             <EllipsisVerticalIcon class="h-6 w-6" />
@@ -123,7 +123,7 @@ const totalGainLossPercent = computed(() => {
             >
             <a
               href="#"
-              @click.prevent="investmentStore.deleteInvestment(investment.firestoreId!)"
+              @click.prevent="investmentStore.deleteInvestment(investment.id)"
               class="block px-4 py-2 text-sm text-red-400 hover:bg-gray-600"
               >Delete</a
             >
